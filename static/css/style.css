@@ -1,0 +1,273 @@
+/* Custom Styles for Fraud Detection System */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Risk Meter Styles */
+.risk-meter {
+    position: relative;
+    height: 40px;
+    background: linear-gradient(to right, #28a745 0%, #28a745 39%, #ffc107 40%, #ffc107 69%, #dc3545 70%, #dc3545 100%);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.risk-meter-marker {
+    position: absolute;
+    top: -5px;
+    width: 4px;
+    height: 50px;
+    background-color: #000;
+    transform: translateX(-50%);
+    border: 2px solid white;
+    border-radius: 2px;
+}
+
+.risk-meter-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Progress Bar Enhancements */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    font-weight: 600;
+    font-size: 1rem;
+    transition: width 1s ease-in-out;
+}
+
+/* Accordion Customization */
+.accordion-button:not(.collapsed) {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #0056b3;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0, 123, 255, 0.25);
+}
+
+/* Card Hover Effects */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Status Badges */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Animation for alerts */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .btn, footer {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .accordion-collapse {
+        display: block !important;
+    }
+    
+    .accordion-button::after {
+        display: none !important;
+    }
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+/* Score Circle Styles */
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    border: 8px solid;
+    background-color: white;
+}
+
+.score-circle.score-low {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.score-circle.score-medium {
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.score-circle.score-high {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.score-value {
+    font-size: 3rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.score-label {
+    font-size: 0.9rem;
+    margin-top: 5px;
+    color: #6c757d;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+.shadow {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Form Styles */
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Table Styles */
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.btn-lg {
+    padding: 12px 24px;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+/* Progress Bar */
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    font-weight: 600;
+}
+
+/* Badge Styles */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Dashboard Stats Cards */
+.card .fs-1, .card .fs-4 {
+    opacity: 0.8;
+}
+
+/* Animation for alerts */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .score-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .score-value {
+        font-size: 2.5rem;
+    }
+    
+    .container-fluid {
+        padding: 0 15px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar, footer, .btn {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}

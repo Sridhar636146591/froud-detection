@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Fraud - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0"><i class="bi bi-flag me-2"></i>Report Fraud</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Feature 11: Citizen Reporting System</p>
+                        <p>Help us fight fraud by reporting suspicious activities. Your report will be reviewed by our team.</p>
+                        
+                        <form method="POST">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" name="reporter_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Your Contact</label>
+                                    <input type="text" class="form-control" name="reporter_contact" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Suspect's Aadhaar (if known)</label>
+                                <input type="text" class="form-control" name="reported_aadhaar" 
+                                       pattern="[0-9]{12}" placeholder="12 digit Aadhaar number"
+                                       value="{{ request.args.get('aadhaar', '') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fraud Type</label>
+                                <select class="form-select" name="fraud_type" required>
+                                    <option value="">Select type...</option>
+                                    <option value="identity_theft">Identity Theft</option>
+                                    <option value="fake_documents">Fake Documents</option>
+                                    <option value="multiple_claims">Multiple Benefit Claims</option>
+                                    <option value="income_falsification">Income Falsification</option>
+                                    <option value="address_fraud">Address Fraud</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="4" required
+                                          placeholder="Please describe the suspicious activity..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Evidence (optional)</label>
+                                <input type="file" class="form-control" multiple>
+                            </div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-send me-2"></i>Submit Report
+                            </button>
+                            <a href="/" class="btn btn-secondary">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

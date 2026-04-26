@@ -1,0 +1,122 @@
+[
+    {
+        "name": "Rajesh Kumar",
+        "aadhaar": "123456789012",
+        "phone": "9876543210",
+        "income": 150000,
+        "address": "123 Gandhi Road, New Delhi, Delhi 110001",
+        "scheme": "PM-KISAN"
+    },
+    {
+        "name": "Sunita Devi",
+        "aadhaar": "234567890123",
+        "phone": "8765432109",
+        "income": 120000,
+        "address": "456 Nehru Street, Mumbai, Maharashtra 400001",
+        "scheme": "PM Awas Yojana"
+    },
+    {
+        "name": "Mohammed Ali",
+        "aadhaar": "345678901234",
+        "phone": "7654321098",
+        "income": 180000,
+        "address": "789 Tagore Lane, Bangalore, Karnataka 560001",
+        "scheme": "Ayushman Bharat"
+    },
+    {
+        "name": "Lakshmi Narayan",
+        "aadhaar": "456789012345",
+        "phone": "6543210987",
+        "income": 95000,
+        "address": "321 Patel Nagar, Ahmedabad, Gujarat 380001",
+        "scheme": "Old Age Pension"
+    },
+    {
+        "name": "Priya Sharma",
+        "aadhaar": "567890123456",
+        "phone": "5432109876",
+        "income": 250000,
+        "address": "654 Bose Colony, Kolkata, West Bengal 700001",
+        "scheme": "MGNREGA"
+    },
+    {
+        "name": "Ramesh Patel",
+        "aadhaar": "678901234567",
+        "phone": "4321098765",
+        "income": 450000,
+        "address": "987 Tilak Marg, Pune, Maharashtra 411001",
+        "scheme": "PM-KISAN"
+    },
+    {
+        "name": "Fatima Begum",
+        "aadhaar": "789012345678",
+        "phone": "3210987654",
+        "income": 80000,
+        "address": "147 Azad Chowk, Hyderabad, Telangana 500001",
+        "scheme": "Widow Pension"
+    },
+    {
+        "name": "Suresh Yadav",
+        "aadhaar": "890123456789",
+        "phone": "2109876543",
+        "income": 200000,
+        "address": "258 Rajpath, Jaipur, Rajasthan 302001",
+        "scheme": "PM Awas Yojana"
+    },
+    {
+        "name": "Anita Kumari",
+        "aadhaar": "901234567890",
+        "phone": "1098765432",
+        "income": 110000,
+        "address": "369 MG Road, Chennai, Tamil Nadu 600001",
+        "scheme": "Disability Pension"
+    },
+    {
+        "name": "Vikram Singh",
+        "aadhaar": "012345678901",
+        "phone": "9988776655",
+        "income": 350000,
+        "address": "753 Lajpat Nagar, Lucknow, Uttar Pradesh 226001",
+        "scheme": "PM-KISAN"
+    },
+    {
+        "name": "Rajesh Kumar",
+        "aadhaar": "123456789012",
+        "phone": "9876543210",
+        "income": 160000,
+        "address": "123 Gandhi Road, New Delhi, Delhi 110001",
+        "scheme": "Ayushman Bharat"
+    },
+    {
+        "name": "Ravi Kumar",
+        "aadhaar": "112233445566",
+        "phone": "9876543210",
+        "income": 140000,
+        "address": "456 Nehru Street, Mumbai, Maharashtra 400001",
+        "scheme": "MGNREGA"
+    },
+    {
+        "name": "Geeta Devi",
+        "aadhaar": "223344556677",
+        "phone": "8765432109",
+        "income": 550000,
+        "address": "999 Luxury Apartments, Mumbai, Maharashtra 400001",
+        "scheme": "PM Awas Yojana"
+    },
+    {
+        "name": "Amit Shah",
+        "aadhaar": "334455667788",
+        "phone": "7654321098",
+        "income": 125000,
+        "address": "111 Shanti Vihar, Bangalore, Karnataka 560001",
+        "scheme": "PM-KISAN"
+    },
+    {
+        "name": "Sneha Gupta",
+        "aadhaar": "445566778899",
+        "phone": "6543210987",
+        "income": 90000,
+        "address": "222 Krishna Colony, Ahmedabad, Gujarat 380001",
+        "scheme": "Old Age Pension"
+    }
+]

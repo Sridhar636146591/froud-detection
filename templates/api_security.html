@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Security - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/api-security">API Security</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2><i class="bi bi-shield-lock me-2"></i>API Security Monitor</h2>
+        <p class="text-muted">Feature 19: Real-time API fraud shield and access monitoring</p>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3><i class="bi bi-shield-check"></i></h3>
+                        <h5>Protected</h5>
+                        <p class="mb-0">Rate Limiting Active</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3><i class="bi bi-speedometer"></i></h3>
+                        <h5>100ms</h5>
+                        <p class="mb-0">Avg Response Time</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h3><i class="bi bi-exclamation-triangle"></i></h3>
+                        <h5>{{ suspicious_ips|length }}</h5>
+                        <p class="mb-0">Suspicious IPs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3><i class="bi bi-ban"></i></h3>
+                        <h5>0</h5>
+                        <p class="mb-0">Blocked Today</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-graph-up me-2"></i>API Endpoint Activity (24h)</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if api_stats %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Requests</th>
+                                    <th>Rate Limit Hits</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in api_stats %}
+                                <tr>
+                                    <td><code>{{ stat.endpoint }}</code></td>
+                                    <td>{{ stat.request_count }}</td>
+                                    <td>
+                                        {% if stat.rate_limit_violations > 0 %}
+                                        <span class="badge bg-danger">{{ stat.rate_limit_violations }}</span>
+                                        {% else %}
+                                        <span class="badge bg-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stat.rate_limit_violations > 10 %}
+                                        <span class="badge bg-danger">At Risk</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="alert alert-light">
+                            <i class="bi bi-info-circle me-2"></i>No API activity recorded yet.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Suspicious IPs</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if suspicious_ips %}
+                        <ul class="list-group list-group-flush">
+                            {% for ip in suspicious_ips %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ ip.ip_address }}</span>
+                                <span class="badge bg-danger">{{ ip.request_count }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>No suspicious IPs detected.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Security Features Active</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-speedometer2 me-2"></i>Rate Limiting</h6>
+                        <p class="small">100 requests per minute per IP</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-key me-2"></i>API Key Validation</h6>
+                        <p class="small">All requests require valid API key</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-robot me-2"></i>Bot Detection</h6>
+                        <p class="small">Automated scraping protection</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

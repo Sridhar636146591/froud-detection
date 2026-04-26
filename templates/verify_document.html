@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Verification - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2><i class="bi bi-file-earmark-check me-2"></i>Document Verification</h2>
+        <p class="text-muted">Feature 3: AI-Powered Document Forgery Detection</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Upload Document</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label">Document Type</label>
+                                <select class="form-select" name="doc_type">
+                                    <option value="aadhaar">Aadhaar Card</option>
+                                    <option value="pan">PAN Card</option>
+                                    <option value="income_certificate">Income Certificate</option>
+                                    <option value="address_proof">Address Proof</option>
+                                    <option value="bank_statement">Bank Statement</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Expected Name on Document</label>
+                                <input type="text" class="form-control" name="expected_name" 
+                                       value="{{ application.name if application else '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Document (PDF/Image)</label>
+                                <input type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <div class="form-text">Max file size: 5MB</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-2"></i>Analyze Document
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="bi bi-info-circle me-2"></i>How It Works</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="bi bi-1-circle me-2 text-primary"></i>
+                                <strong>OCR Extraction:</strong> Extracts text from document
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-2-circle me-2 text-primary"></i>
+                                <strong>Forgery Detection:</strong> Checks for digital manipulation
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-3-circle me-2 text-primary"></i>
+                                <strong>Metadata Analysis:</strong> Verifies document authenticity
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-4-circle me-2 text-primary"></i>
+                                <strong>Cross-Validation:</strong> Matches with application data
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

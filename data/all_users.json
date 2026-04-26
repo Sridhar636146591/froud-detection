@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "created_at": "2025-01-14T10:00:00",
+    "last_updated": "2026-04-15T15:42:29.778886",
+    "total_users": 7,
+    "version": "1.0"
+  },
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "email": "admin@gov.in",
+      "full_name": "System Administrator",
+      "role": "admin",
+      "department": "IT",
+      "email_verified": true,
+      "created_at": "2025-01-14T10:00:00",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 2,
+      "username": "officer1",
+      "password": "officer123",
+      "email": "officer1@gov.in",
+      "full_name": "Officer One",
+      "role": "officer",
+      "department": "Welfare",
+      "email_verified": true,
+      "created_at": "2025-01-14T10:00:00",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 3,
+      "username": "officer2",
+      "password": "officer123",
+      "email": "officer2@gov.in",
+      "full_name": "Officer Two",
+      "role": "officer",
+      "department": "Revenue",
+      "email_verified": true,
+      "created_at": "2025-01-14T10:00:00",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 4,
+      "username": "testuser123",
+      "password": "testpass123",
+      "email": "test@example.com",
+      "full_name": "Test User",
+      "role": "officer",
+      "department": "Testing",
+      "email_verified": true,
+      "created_at": "2026-04-14T18:13:31.023084",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 5,
+      "username": "siddu",
+      "password": "636363",
+      "email": "sridharreddy@gmail.com",
+      "full_name": "siddu",
+      "role": "officer",
+      "department": "cs",
+      "email_verified": true,
+      "created_at": "2026-04-14T19:31:24.407372",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 6,
+      "username": "akash",
+      "password": "123456",
+      "email": "akash@gmail.com",
+      "full_name": "akash Gowda",
+      "role": "officer",
+      "department": "social ewlfare",
+      "email_verified": true,
+      "created_at": "2026-04-14T19:59:37.659424",
+      "is_active": true,
+      "last_login": null
+    },
+    {
+      "id": 7,
+      "username": "kkk",
+      "password": "111222",
+      "email": "ksjdhdhg@gmail.com",
+      "full_name": "kushal",
+      "role": "officer",
+      "department": "cs",
+      "email_verified": true,
+      "created_at": "2026-04-15T15:42:29.778648",
+      "is_active": true,
+      "last_login": null
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Application - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/new-application">
+                            <i class="bi bi-plus-circle me-1"></i>New Application
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if session.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="bi bi-people me-1"></i>Manage Users
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>{{ session.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">
+                                <i class="bi bi-person me-2"></i>My Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Welfare Scheme Application</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <form action="/submit" method="POST" id="applicationForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Full Name *
+                                    </label>
+                                    <input type="text" class="form-control" id="name" name="name" required 
+                                           placeholder="Enter full name as per Aadhaar">
+                                    <div class="form-text">Name should match Aadhaar card</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="aadhaar" class="form-label">
+                                        <i class="bi bi-credit-card me-1"></i>Aadhaar Number *
+                                    </label>
+                                    <input type="text" class="form-control" id="aadhaar" name="aadhaar" 
+                                           required pattern="[0-9]{12}" maxlength="12"
+                                           placeholder="12-digit Aadhaar number">
+                                    <div class="form-text">Enter 12-digit Aadhaar number</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="phone" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Phone Number *
+                                    </label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           required pattern="[0-9]{10}" maxlength="10"
+                                           placeholder="10-digit mobile number">
+                                    <div class="form-text">Enter 10-digit mobile number</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="income" class="form-label">
+                                        <i class="bi bi-currency-rupee me-1"></i>Annual Income (₹) *
+                                    </label>
+                                    <input type="number" class="form-control" id="income" name="income" 
+                                           required min="0" placeholder="Annual income">
+                                    <div class="form-text">Enter annual family income</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="age" class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>Age *
+                                    </label>
+                                    <input type="number" class="form-control" id="age" name="age" 
+                                           required min="18" max="120" placeholder="Age in years">
+                                    <div class="form-text">Applicant age (18-120)</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="gender" class="form-label">
+                                        <i class="bi bi-gender-ambiguous me-1"></i>Gender *
+                                    </label>
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="district" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>District *
+                                    </label>
+                                    <input type="text" class="form-control" id="district" name="district" 
+                                           required placeholder="Enter district name">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address *</label>
+                                <textarea class="form-control" id="address" name="address" rows="3" required
+                                          placeholder="Enter complete residential address"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="scheme" class="form-label">Scheme Applied For *</label>
+                                <select class="form-select" id="scheme" name="scheme" required>
+                                    <option value="">Select a scheme</option>
+                                    <option value="PM-KISAN">PM-KISAN</option>
+                                    <option value="MGNREGA">MGNREGA</option>
+                                    <option value="Ayushman Bharat">Ayushman Bharat</option>
+                                    <option value="PM Awas Yojana">PM Awas Yojana</option>
+                                    <option value="Old Age Pension">Old Age Pension</option>
+                                    <option value="Widow Pension">Widow Pension</option>
+                                    <option value="Disability Pension">Disability Pension</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Submit Application & Check for Fraud
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">About the Fraud Detection System</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">This AI-powered system detects fraudulent applications using:</p>
+                        <ul class="mb-0">
+                            <li><strong>Rule-based checks:</strong> Duplicate Aadhaar, phone validation, income verification</li>
+                            <li><strong>Machine Learning:</strong> Isolation Forest algorithm for anomaly detection</li>
+                            <li><strong>Risk Scoring:</strong> 0-100 score with explainable results</li>
+                        </ul>
+                        <hr>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <span class="badge bg-success fs-6">0-39: APPROVE</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="badge bg-warning text-dark fs-6">40-69: REVIEW</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="badge bg-danger fs-6">70-100: REJECT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                AI-Powered Fraud Detection System for Government Schemes | 2024-25
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            const aadhaar = document.getElementById('aadhaar').value;
+            const phone = document.getElementById('phone').value;
+            
+            if (!/^\d{12}$/.test(aadhaar)) {
+                alert('Please enter a valid 12-digit Aadhaar number');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!/^\d{10}$/.test(phone)) {
+                alert('Please enter a valid 10-digit phone number');
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

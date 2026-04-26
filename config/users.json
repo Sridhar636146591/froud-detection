@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "email": "admin@gov.in",
+      "full_name": "System Administrator",
+      "role": "admin",
+      "department": "IT",
+      "email_verified": true
+    },
+    {
+      "username": "officer1",
+      "password": "officer123",
+      "email": "officer1@gov.in",
+      "full_name": "Officer One",
+      "role": "officer",
+      "department": "Welfare",
+      "email_verified": true
+    },
+    {
+      "username": "officer2",
+      "password": "officer123",
+      "email": "officer2@gov.in",
+      "full_name": "Officer Two",
+      "role": "officer",
+      "department": "Revenue",
+      "email_verified": true
+    }
+  ]
+}

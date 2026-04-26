@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analysis - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/application/{{ application.id }}">Back to Application</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="bi bi-cpu me-2"></i>Advanced Fraud Analysis</h2>
+                <p class="text-muted">Comprehensive AI-powered risk assessment for {{ application.name }}</p>
+            </div>
+            <div class="text-end">
+                <div class="display-4 fw-bold text-{{ 'danger' if total_risk > 70 else 'warning' if total_risk > 40 else 'success' }}">
+                    {{ total_risk }}
+                </div>
+                <small class="text-muted">Total Risk Score</small>
+            </div>
+        </div>
+
+        <!-- Security Level Badge -->
+        <div class="alert alert-{{ 'danger' if security_level.level == 'Maximum' else 'warning' if security_level.level == 'Enhanced' else 'info' }}">
+            <h5><i class="bi bi-shield-lock me-2"></i>Adaptive Security Level: {{ security_level.level }}</h5>
+            <div class="row mt-2">
+                <div class="col-md-3">
+                    <i class="bi {{ 'bi-check-circle-fill text-success' if security_level.requires_document else 'bi-x-circle text-muted' }}"></i>
+                    Document Verification
+                </div>
+                <div class="col-md-3">
+                    <i class="bi {{ 'bi-check-circle-fill text-success' if security_level.requires_face else 'bi-x-circle text-muted' }}"></i>
+                    Face Verification
+                </div>
+                <div class="col-md-3">
+                    <i class="bi {{ 'bi-check-circle-fill text-success' if security_level.requires_verification else 'bi-x-circle text-muted' }}"></i>
+                    External Verification
+                </div>
+                <div class="col-md-3">
+                    <i class="bi {{ 'bi-check-circle-fill text-success' if security_level.manual_review else 'bi-x-circle text-muted' }}"></i>
+                    Manual Review
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Analysis Cards -->
+        <div class="row">
+            <!-- Predictive Fraud Detection -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-danger' if analysis.predictive.prediction.predicted_score > 70 else 'border-warning' if analysis.predictive.prediction.predicted_score > 50 else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-graph-up-arrow me-2"></i>1. Predictive Fraud Detection</span>
+                        <span class="badge bg-{{ 'danger' if analysis.predictive.prediction.predicted_score > 70 else 'warning' if analysis.predictive.prediction.predicted_score > 50 else 'success' }}">
+                            {{ analysis.predictive.prediction.predicted_score }} Risk
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Prediction:</strong> {{ analysis.predictive.prediction.risk_level }} risk</p>
+                        <p><strong>Confidence:</strong> {{ analysis.predictive.prediction.confidence }}%</p>
+                        <p><strong>Recommended:</strong> {{ analysis.predictive.prediction.recommended_action }}</p>
+                        <ul class="small">
+                            {% for factor in analysis.predictive.prediction.prediction_factors %}
+                            <li>{{ factor }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Analysis -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-danger' if analysis.network.is_fraud_ring else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-diagram-3 me-2"></i>2. Network/Graph Analysis</span>
+                        <span class="badge bg-{{ 'danger' if analysis.network.is_fraud_ring else 'success' }}">
+                            {{ analysis.network.total_connections }} Links
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Network Size:</strong> {{ analysis.network.network_size }}</p>
+                        <p><strong>Fraud Ring:</strong> {{ 'Yes' if analysis.network.is_fraud_ring else 'No' }}</p>
+                        {% if analysis.network.risk_indicators %}
+                        <ul class="small text-danger">
+                            {% for indicator in analysis.network.risk_indicators %}
+                            <li>{{ indicator }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Anomaly -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-warning' if analysis.time_anomaly.is_suspicious else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-clock-history me-2"></i>5. Time-Based Anomaly</span>
+                        <span class="badge bg-{{ 'warning' if analysis.time_anomaly.is_suspicious else 'success' }}">
+                            {{ analysis.time_anomaly.submission_hour }}:00
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Submission Time:</strong> {{ analysis.time_anomaly.submission_hour }}:00</p>
+                        {% if analysis.time_anomaly.reasons %}
+                        <ul class="small text-warning">
+                            {% for reason in analysis.time_anomaly.reasons %}
+                            <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-success">No time anomalies detected</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geo-Fencing -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-danger' if not analysis.geo_fencing.is_valid_location else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-geo-alt me-2"></i>6. Geo-Fencing</span>
+                        <span class="badge bg-{{ 'success' if analysis.geo_fencing.is_valid_location else 'danger' }}">
+                            {{ 'Valid' if analysis.geo_fencing.is_valid_location else 'Invalid' }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Location:</strong> {{ analysis.geo_fencing.geo_data.city }}</p>
+                        <p><strong>Eligible Region:</strong> {{ 'Yes' if analysis.geo_fencing.geo_data.is_eligible_region else 'No' }}</p>
+                        {% if analysis.geo_fencing.reasons %}
+                        <ul class="small text-danger">
+                            {% for reason in analysis.geo_fencing.reasons %}
+                            <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Patterns -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-warning' if analysis.financial.is_suspicious else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-bank me-2"></i>7. Financial Pattern Monitoring</span>
+                        <span class="badge bg-{{ 'warning' if analysis.financial.is_suspicious else 'success' }}">
+                            {{ analysis.financial.risk_added }} Risk
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        {% if analysis.financial.reasons %}
+                        <ul class="small text-warning">
+                            {% for reason in analysis.financial.reasons %}
+                            <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-success">No financial anomalies detected</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Score -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-success' if analysis.trust_score.trust_score > 70 else 'border-warning' if analysis.trust_score.trust_score > 40 else 'border-danger' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-award me-2"></i>9. Social Trust Score</span>
+                        <span class="badge bg-{{ 'success' if analysis.trust_score.trust_score > 70 else 'warning' if analysis.trust_score.trust_score > 40 else 'danger' }}">
+                            {{ analysis.trust_score.trust_score }}/100
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Trust Level:</strong> {{ analysis.trust_score.trust_level }}</p>
+                        <p><strong>Risk Reduction:</strong> -{{ analysis.trust_score.risk_reduction }}</p>
+                        {% if analysis.trust_score.verification_badge %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Verified User</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefit Abuse -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-danger' if analysis.benefit_abuse.is_abuse else 'border-success' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-collection me-2"></i>18. Benefit Abuse Tracking</span>
+                        <span class="badge bg-{{ 'danger' if analysis.benefit_abuse.is_abuse else 'success' }}">
+                            {{ analysis.benefit_abuse.total_claims }} Claims
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Schemes Claimed:</strong> {{ analysis.benefit_abuse.schemes_claimed|join(', ') or 'None' }}</p>
+                        <p><strong>Active Claims:</strong> {{ analysis.benefit_abuse.current_active }}</p>
+                        {% if analysis.benefit_abuse.reasons %}
+                        <ul class="small text-danger">
+                            {% for reason in analysis.benefit_abuse.reasons %}
+                            <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Check -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 {{ 'border-danger' if analysis.list_check.is_blacklisted else 'border-success' if analysis.list_check.is_whitelisted else 'border-secondary' }}">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-list-check me-2"></i>20. Blacklist/Whitelist</span>
+                        <span class="badge bg-{{ 'danger' if analysis.list_check.is_blacklisted else 'success' if analysis.list_check.is_whitelisted else 'secondary' }}">
+                            {{ analysis.list_check.action }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        {% if analysis.list_check.is_blacklisted %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Entity is BLACKLISTED
+                        </div>
+                        {% elif analysis.list_check.is_whitelisted %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>Entity is WHITELISTED
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Not on any list</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explainable AI Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>12. Explainable AI - Decision Factors</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ explanation.summary }}</strong></p>
+                {% if explanation.explanations %}
+                <ul class="list-group">
+                    {% for exp in explanation.explanations %}
+                    <li class="list-group-item">
+                        <i class="bi bi-arrow-right-circle me-2 text-warning"></i>{{ exp }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>No risk factors detected - application appears legitimate
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4 mb-5">
+            <a href="/application/{{ application.id }}" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Application
+            </a>
+            <a href="/verify-document/{{ application.id }}" class="btn btn-warning">
+                <i class="bi bi-file-earmark-check me-2"></i>Verify Documents
+            </a>
+            <a href="/verify-face/{{ application.id }}" class="btn btn-info">
+                <i class="bi bi-person-bounding-box me-2"></i>Face Verification
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

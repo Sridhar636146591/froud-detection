@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/new-application">
+                            <i class="bi bi-plus-circle me-1"></i>New Application
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock me-1"></i>Advanced Features
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/network-analysis">
+                                <i class="bi bi-diagram-3 me-2"></i>Network Analysis
+                            </a></li>
+                            <li><a class="dropdown-item" href="/pending-verifications">
+                                <i class="bi bi-check2-square me-2"></i>Pending Verifications
+                            </a></li>
+                            <li><a class="dropdown-item" href="/fraud-simulation">
+                                <i class="bi bi-cpu me-2"></i>Fraud Simulation
+                            </a></li>
+                            <li><a class="dropdown-item" href="/audit-log">
+                                <i class="bi bi-clock-history me-2"></i>Audit Trail
+                            </a></li>
+                            <li><a class="dropdown-item" href="/api-security">
+                                <i class="bi bi-shield-check me-2"></i>API Security
+                            </a></li>
+                            {% if session.role == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/reports">
+                                <i class="bi bi-flag me-2"></i>Citizen Reports
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/blacklist">
+                                <i class="bi bi-list-check me-2"></i>Blacklist/Whitelist
+                            </a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if session.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="bi bi-people me-1"></i>Manage Users
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>{{ session.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">
+                                <i class="bi bi-person me-2"></i>My Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Applications</h6>
+                                <h2 class="mb-0">{{ stats.total }}</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-people fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Approved</h6>
+                                <h2 class="mb-0">{{ stats.approved }}</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <span class="fs-4">✓</span>
+                            </div>
+                        </div>
+                        <small>{{ "%.1f"|format(stats.approved / stats.total * 100) if stats.total > 0 else 0 }}% of total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Under Review</h6>
+                                <h2 class="mb-0">{{ stats.review }}</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <span class="fs-4">⚠</span>
+                            </div>
+                        </div>
+                        <small>{{ "%.1f"|format(stats.review / stats.total * 100) if stats.total > 0 else 0 }}% of total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Rejected (Fraud)</h6>
+                                <h2 class="mb-0">{{ stats.rejected }}</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <span class="fs-4">✕</span>
+                            </div>
+                        </div>
+                        <small>{{ "%.1f"|format(stats.rejected / stats.total * 100) if stats.total > 0 else 0 }}% of total</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1: Main Analytics -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Classification Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="classificationChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Daily Applications & Fraud Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendsChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2: Scheme & Risk Analysis -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Applications by Scheme</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="schemeChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Risk Score Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="riskDistributionChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 3: Fraud Detection & User Activity -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Fraud Indicators Detected</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="fraudIndicatorsChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Hourly Activity Pattern</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="hourlyActivityChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 4: Geographic & Monthly Trends -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Top Districts by Applications</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="districtChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-calendar-month me-2"></i>Monthly Fraud Detection Rate</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="monthlyFraudChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search by name, Aadhaar...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="schemeFilter">
+                            <option value="">All Schemes</option>
+                            <option value="PM-KISAN">PM-KISAN</option>
+                            <option value="MGNREGA">MGNREGA</option>
+                            <option value="Ayushman Bharat">Ayushman Bharat</option>
+                            <option value="PM Awas Yojana">PM Awas Yojana</option>
+                            <option value="Old Age Pension">Old Age Pension</option>
+                            <option value="Widow Pension">Widow Pension</option>
+                            <option value="Disability Pension">Disability Pension</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="APPROVE">Approved</option>
+                            <option value="REVIEW">Under Review</option>
+                            <option value="REJECT">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="riskFilter">
+                            <option value="">All Risk Levels</option>
+                            <option value="low">Low (0-39)</option>
+                            <option value="medium">Medium (40-69)</option>
+                            <option value="high">High (70-100)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary flex-fill" onclick="applyFilters()">
+                                <i class="bi bi-funnel me-1"></i>Apply Filters
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-success" onclick="exportTable()">
+                                <i class="bi bi-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications Table -->
+        <div class="card shadow">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-table me-2"></i>Recent Applications</h5>
+                <div>
+                    <span class="badge bg-primary me-2" id="totalCount">{{ applications|length }} records</span>
+                    <span class="badge bg-success" id="showingCount">Showing all</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="applicationsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Scheme</th>
+                                <th>Aadhaar</th>
+                                <th>Income (₹)</th>
+                                <th>Risk Score</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td>{{ app.id }}</td>
+                                <td>{{ app.name }}</td>
+                                <td><span class="badge bg-info">{{ app.scheme }}</span></td>
+                                <td>****{{ app.aadhaar[-4:] }}</td>
+                                <td>₹{{ "{:,.0f}".format(app.income) }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if app.risk_score <= 39 %}bg-success
+                                        {% elif app.risk_score <= 69 %}bg-warning text-dark
+                                        {% else %}bg-danger{% endif %}
+                                        fs-6">
+                                        {{ app.risk_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if app.classification == 'APPROVE' %}
+                                        <span class="badge bg-success">APPROVED</span>
+                                    {% elif app.classification == 'REJECT' %}
+                                        <span class="badge bg-danger">REJECTED</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">REVIEW</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ app.created_at[:10] }}</small></td>
+                                <td>
+                                    <a href="/details/{{ app.id }}" class="btn btn-sm btn-outline-primary">Details</a>
+                                    <a href="/report-fraud?aadhaar={{ app.aadhaar }}&name={{ app.name }}" 
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-flag"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    No applications found. <a href="/">Submit your first application</a>.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                AI-Powered Fraud Detection System for Government Schemes | 2024-25
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Classification Distribution Chart
+        const classificationCtx = document.getElementById('classificationChart').getContext('2d');
+        new Chart(classificationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Under Review', 'Rejected'],
+                datasets: [{
+                    data: [{{ stats.approved }}, {{ stats.review }}, {{ stats.rejected }}],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Daily Trends Chart
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        const dailyStats = {{ stats.daily_stats | tojson }};
+        
+        const dates = dailyStats.map(d => d.date);
+        const counts = dailyStats.map(d => d.count);
+        const fraudCounts = dailyStats.map(d => d.fraud_count);
+
+        new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: dates.length > 0 ? dates : ['No Data'],
+                datasets: [{
+                    label: 'Total Applications',
+                    data: counts.length > 0 ? counts : [0],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Fraud Detected',
+                    data: fraudCounts.length > 0 ? fraudCounts : [0],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Scheme Distribution Chart
+        const schemeCtx = document.getElementById('schemeChart').getContext('2d');
+        const schemeStats = {{ stats.scheme_stats | tojson }};
+        
+        new Chart(schemeCtx, {
+            type: 'bar',
+            data: {
+                labels: schemeStats.map(s => s.scheme),
+                datasets: [{
+                    label: 'Applications',
+                    data: schemeStats.map(s => s.count),
+                    backgroundColor: [
+                        '#007bff', '#28a745', '#ffc107', '#dc3545', 
+                        '#6f42c1', '#fd7e14', '#20c997', '#e83e8c'
+                    ],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // Risk Score Distribution Chart
+        const riskDistCtx = document.getElementById('riskDistributionChart').getContext('2d');
+        const riskStats = {{ stats.risk_distribution | tojson }};
+        
+        new Chart(riskDistCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-20 (Safe)', '21-40 (Low)', '41-60 (Medium)', '61-80 (High)', '81-100 (Critical)'],
+                datasets: [{
+                    label: 'Number of Applications',
+                    data: [
+                        riskStats.safe || 0,
+                        riskStats.low || 0,
+                        riskStats.medium || 0,
+                        riskStats.high || 0,
+                        riskStats.critical || 0
+                    ],
+                    backgroundColor: [
+                        '#28a745', '#90ee90', '#ffc107', '#fd7e14', '#dc3545'
+                    ],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // Fraud Indicators Chart
+        const fraudIndCtx = document.getElementById('fraudIndicatorsChart').getContext('2d');
+        const fraudIndicators = {{ stats.fraud_indicators | tojson }};
+        
+        if (fraudIndicators.length > 0) {
+            new Chart(fraudIndCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: fraudIndicators.map(i => i.type),
+                    datasets: [{
+                        data: fraudIndicators.map(i => i.count),
+                        backgroundColor: [
+                            '#dc3545', '#fd7e14', '#ffc107', '#17a2b8', 
+                            '#6f42c1', '#e83e8c', '#20c997', '#6c757d'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 15, font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Show "No Data" message
+            fraudIndCtx.font = '16px Arial';
+            fraudIndCtx.fillStyle = '#6c757d';
+            fraudIndCtx.textAlign = 'center';
+            fraudIndCtx.fillText('No fraud indicators detected', fraudIndCtx.canvas.width / 2, fraudIndCtx.canvas.height / 2);
+        }
+
+        // Hourly Activity Chart
+        const hourlyCtx = document.getElementById('hourlyActivityChart').getContext('2d');
+        const hourlyStats = {{ stats.hourly_activity | tojson }};
+        
+        new Chart(hourlyCtx, {
+            type: 'line',
+            data: {
+                labels: hourlyStats.map(h => h.hour + ':00'),
+                datasets: [{
+                    label: 'Applications',
+                    data: hourlyStats.map(h => h.count),
+                    borderColor: '#6f42c1',
+                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#6f42c1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // District Chart
+        const districtCtx = document.getElementById('districtChart').getContext('2d');
+        const districtStats = {{ stats.district_stats | tojson }};
+        
+        if (districtStats.length > 0) {
+            new Chart(districtCtx, {
+                type: 'bar',
+                data: {
+                    labels: districtStats.map(d => d.district),
+                    datasets: [{
+                        label: 'Applications',
+                        data: districtStats.map(d => d.count),
+                        backgroundColor: '#20c997',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        } else {
+            // Show "No Data" message
+            districtCtx.font = '16px Arial';
+            districtCtx.fillStyle = '#6c757d';
+            districtCtx.textAlign = 'center';
+            districtCtx.fillText('No district data available', districtCtx.canvas.width / 2, districtCtx.canvas.height / 2);
+        }
+
+        // Monthly Fraud Chart
+        const monthlyCtx = document.getElementById('monthlyFraudChart').getContext('2d');
+        const monthlyStats = {{ stats.monthly_stats | tojson }};
+        
+        new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: monthlyStats.map(m => m.month),
+                datasets: [{
+                    label: 'Total Applications',
+                    data: monthlyStats.map(m => m.total),
+                    backgroundColor: '#007bff',
+                    borderRadius: 5
+                }, {
+                    label: 'Fraud Detected',
+                    data: monthlyStats.map(m => m.fraud),
+                    backgroundColor: '#dc3545',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // Filter and Search Functions
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const schemeFilter = document.getElementById('schemeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const riskFilter = document.getElementById('riskFilter').value;
+            
+            const table = document.getElementById('applicationsTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let visibleCount = 0;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                
+                if (cells.length < 9) continue;
+                
+                const name = cells[1].textContent.toLowerCase();
+                const aadhaar = cells[3].textContent.toLowerCase();
+                const scheme = cells[2].textContent.trim();
+                const status = cells[6].textContent.trim();
+                const riskScore = parseInt(cells[5].textContent.trim());
+                
+                let showRow = true;
+                
+                // Search filter
+                if (searchTerm && !name.includes(searchTerm) && !aadhaar.includes(searchTerm)) {
+                    showRow = false;
+                }
+                
+                // Scheme filter
+                if (schemeFilter && !scheme.includes(schemeFilter)) {
+                    showRow = false;
+                }
+                
+                // Status filter
+                if (statusFilter) {
+                    const statusText = status.toUpperCase();
+                    if (statusFilter === 'APPROVE' && !statusText.includes('APPROVED')) showRow = false;
+                    if (statusFilter === 'REVIEW' && !statusText.includes('REVIEW')) showRow = false;
+                    if (statusFilter === 'REJECT' && !statusText.includes('REJECTED')) showRow = false;
+                }
+                
+                // Risk filter
+                if (riskFilter) {
+                    if (riskFilter === 'low' && riskScore > 39) showRow = false;
+                    if (riskFilter === 'medium' && (riskScore <= 39 || riskScore > 69)) showRow = false;
+                    if (riskFilter === 'high' && riskScore <= 69) showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            }
+            
+            document.getElementById('showingCount').textContent = `Showing ${visibleCount} of ${rows.length}`;
+        }
+        
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('schemeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('riskFilter').value = '';
+            applyFilters();
+        }
+        
+        function exportTable() {
+            const table = document.getElementById('applicationsTable');
+            let csv = [];
+            
+            // Get headers
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push('"' + th.textContent.trim() + '"');
+            });
+            csv.push(headers.join(','));
+            
+            // Get visible rows
+            table.querySelectorAll('tbody tr').forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = [];
+                    row.querySelectorAll('td').forEach(td => {
+                        cells.push('"' + td.textContent.trim().replace(/"/g, '""') + '"');
+                    });
+                    csv.push(cells.join(','));
+                }
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'fraud_detection_report_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Real-time search
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        
+        // Auto-apply filters on change
+        document.getElementById('schemeFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('riskFilter').addEventListener('change', applyFilters);
+    </script>
+</body>
+</html>

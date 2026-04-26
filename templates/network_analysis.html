@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Analysis - Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check me-2"></i>
+                <strong>Fraud Detection</strong>
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/network-analysis">Network Analysis</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2><i class="bi bi-diagram-3 me-2"></i>Network & Fraud Ring Analysis</h2>
+        <p class="text-muted">Feature 2: Detect organized fraud through connection analysis</p>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5>Total Network Links</h5>
+                        <h2>{{ stats.total_links }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5>Unique Entities</h5>
+                        <h2>{{ stats.unique_entities }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5>Fraud Rings Detected</h5>
+                        <h2>{{ stats.detected_rings }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5>Avg Connections</h5>
+                        <h2>{{ "%.1f"|format(stats.average_connections_per_entity) }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detected Fraud Rings -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Detected Fraud Rings</h5>
+            </div>
+            <div class="card-body">
+                {% if rings %}
+                <div class="accordion" id="ringsAccordion">
+                    {% for ring in rings %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#ring{{ loop.index }}">
+                                <span class="badge bg-{{ 'danger' if ring.risk_level == 'Critical' else 'warning' if ring.risk_level == 'High' else 'info' }} me-2">
+                                    {{ ring.risk_level }}
+                                </span>
+                                {{ ring.ring_id }} - {{ ring.size }} Applications (Risk: {{ ring.risk_score }})
+                            </button>
+                        </h2>
+                        <div id="ring{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#ringsAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Connection Types:</h6>
+                                        <ul>
+                                            {% for type, count in ring.connection_types.items() %}
+                                            <li>{{ type }}: {{ count }} connections</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Shared Entities:</h6>
+                                        <ul>
+                                            {% for entity in ring.shared_entities %}
+                                            <li><small>{{ entity }}</small></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <h6 class="mt-3">Applications in Ring:</h6>
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Scheme</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for app in ring.applications %}
+                                        <tr>
+                                            <td>{{ app.name }}</td>
+                                            <td>{{ app.scheme }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if app.classification == 'APPROVE' else 'warning' if app.classification == 'REVIEW' else 'danger' }}">
+                                                    {{ app.classification }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div class="alert alert-warning">
+                                    <strong>Recommended Action:</strong> {{ ring.recommended_action }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>No fraud rings detected at this time.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Most Connected Entities -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Most Connected Entities</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Entity Type</th>
+                            <th>Entity Value</th>
+                            <th>Connection Count</th>
+                            <th>Risk Indicator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entity in stats.top_connected_entities %}
+                        <tr class="{{ 'table-danger' if entity.connection_count > 3 else 'table-warning' if entity.connection_count > 2 else '' }}">
+                            <td>{{ entity.entity_type }}</td>
+                            <td>{{ entity.entity_value[:4] }}****</td>
+                            <td>{{ entity.connection_count }}</td>
+                            <td>
+                                {% if entity.connection_count > 3 %}
+                                <span class="badge bg-danger">High Risk</span>
+                                {% elif entity.connection_count > 2 %}
+                                <span class="badge bg-warning">Medium Risk</span>
+                                {% else %}
+                                <span class="badge bg-info">Low Risk</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
