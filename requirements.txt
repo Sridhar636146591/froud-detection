@@ -1,6 +1,6 @@
 Flask==3.0.0
 scikit-learn==1.4.0
-numpy==1.26.0
+numpy>=1.26.0
 Werkzeug==3.0.1
 gunicorn==21.2.0
 flasgger==0.9.7.1
