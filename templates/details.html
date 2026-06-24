@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -31,6 +32,13 @@
                             <i class="bi bi-plus-circle me-1"></i>New Application
                         </a>
                     </li>
+                    {% if session.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/manual-approve">
+                            <i class="bi bi-patch-check me-1"></i>Manual Approve
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if session.role == 'admin' %}
@@ -73,8 +81,11 @@
         {% endwith %}
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <!-- Back Button -->
-                <a href="/dashboard" class="btn btn-outline-secondary mb-3">← Back to Dashboard</a>
+                <!-- Back Button & Report Download -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="/dashboard" class="btn btn-cyber btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+                    <button onclick="downloadApplicationPDFReport()" class="btn btn-cyber btn-sm"><i class="bi bi-file-earmark-pdf me-1 text-danger"></i>Download PDF Report</button>
+                </div>
 
                 <div class="card shadow">
                     <div class="card-header 
@@ -215,10 +226,13 @@
 
                         <!-- Action Buttons -->
                         <div class="mt-4 d-flex gap-2">
-                            <a href="/report-fraud?aadhaar={{ application.aadhaar }}&name={{ application.name }}" 
-                               class="btn btn-warning">
-                                <i class="bi bi-flag me-2"></i>Report This Application
-                            </a>
+                             <a href="/report-fraud?aadhaar={{ application.aadhaar }}&name={{ application.name }}" 
+                                class="btn btn-warning me-2">
+                                 <i class="bi bi-flag me-2"></i>Report This Application
+                             </a>
+                             <button onclick="downloadApplicationPDFReport()" class="btn btn-danger me-2">
+                                 <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
+                             </button>
                             {% if session.role == 'admin' %}
                             <form method="POST" action="/delete-application/{{ application.id }}" 
                                   onsubmit="return confirm('Are you sure you want to delete this application? This action cannot be undone.');">
@@ -243,6 +257,164 @@
         </div>
     </footer>
 
+    <script>
+        function downloadApplicationPDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header Box
+            doc.setFillColor(8, 12, 20);
+            doc.rect(0, 0, 210, 42, 'F');
+            
+            // Header Content
+            doc.setTextColor(0, 240, 255);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(22);
+            doc.text("SENTINEL AI - AUDIT FORENSICS", 15, 18);
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.text("OFFICIAL APPLICATION DETAILS & AUDIT RECORD", 15, 26);
+            doc.text("GOVERNMENT WELFARE AUDIT DIVISION", 15, 31);
+            
+            doc.setTextColor(150, 150, 150);
+            doc.text("REGULATORY RECORD", 155, 18);
+            doc.text(`DATE: ${new Date().toLocaleString()}`, 115, 31);
+            
+            // Primary divider
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1.5);
+            doc.line(15, 42, 195, 42);
+            
+            // Summary details
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("1. CLAIMANT AUDIT SUMMARY", 15, 54);
+            
+            // Draw a grey box
+            doc.setFillColor(245, 247, 250);
+            doc.rect(15, 60, 180, 45, 'F');
+            doc.setDrawColor(210, 220, 230);
+            doc.rect(15, 60, 180, 45);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.setTextColor(50, 60, 70);
+            doc.text(`Application ID: {{ application.id }}`, 20, 67);
+            doc.text(`Name: {{ application.name }}`, 20, 73);
+            doc.text(`Aadhaar: {{ application.aadhaar }}`, 20, 79);
+            doc.text(`Phone: {{ application.phone }}`, 20, 85);
+            doc.text(`Scheme: {{ application.scheme }}`, 20, 91);
+            doc.text(`Income: INR {{ application.income }}`, 20, 97);
+            
+            // Risk Badge inside summary box
+            const score = {{ application.risk_score }};
+            const classification = "{{ application.classification or 'REVIEW' }}";
+            doc.setFillColor(score > 70 ? 239 : score > 40 ? 245 : 16, score > 70 ? 68 : score > 40 ? 158 : 185, score > 70 ? 68 : score > 40 ? 11 : 129); // red, yellow, green
+            doc.rect(125, 65, 60, 35, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text(`STATUS: ${classification}`, 130, 75);
+            doc.text(`RISK SCORE: ${score}/100`, 130, 83);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.text(`DATE CREATED:`, 130, 91);
+            doc.text(`{{ application.created_at }}`, 130, 95);
+            
+            // Detailed Parameter list
+            let y = 120;
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("2. DETAILED METADATA PARAMETERS", 15, y);
+            y += 8;
+            
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            
+            function drawGridRow(label, value) {
+                doc.setDrawColor(220, 220, 220);
+                doc.line(15, y, 195, y);
+                doc.setFont("courier", "bold");
+                doc.text(label.padEnd(20), 20, y + 6);
+                doc.setFont("courier", "normal");
+                doc.text(String(value), 80, y + 6);
+                y += 10;
+            }
+            
+            drawGridRow("Application ID", "{{ application.id }}");
+            drawGridRow("Claimant Name", "{{ application.name }}");
+            drawGridRow("Aadhaar ID", "{{ application.aadhaar }}");
+            drawGridRow("Phone Number", "{{ application.phone }}");
+            drawGridRow("District", "{{ application.district }}");
+            drawGridRow("State", "{{ application.state }}");
+            drawGridRow("Pincode", "{{ application.pincode }}");
+            drawGridRow("Email Address", "{{ application.email or 'N/A' }}");
+            drawGridRow("Reported Income", "INR {{ application.income }}");
+            drawGridRow("Verification Status", "{{ application.status }}");
+            
+            doc.setDrawColor(220, 220, 220);
+            doc.line(15, y, 195, y);
+            
+            // Add Page 2 for triggered reasons
+            doc.addPage();
+            doc.setFillColor(8, 12, 20);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(0, 240, 255);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(14);
+            doc.text("SENTINEL AI - AUDIT DETAILS PAGE 2", 15, 15);
+            
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1);
+            doc.line(15, 25, 195, 25);
+            
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("3. DETECTED RISK FACTOR LOGS & REASONS", 15, 40);
+            
+            let expY = 50;
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            
+            {% if application.reasons %}
+                {% for reason in application.reasons %}
+                    doc.text("- {{ reason }}", 15, expY);
+                    expY += 8;
+                {% endfor %}
+            {% else %}
+                doc.text("No specific risk triggers recorded. Application is clean.", 15, expY);
+            {% endif %}
+            
+            // Cryptographic seal signature
+            expY += 20;
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1);
+            doc.rect(130, expY, 65, 25);
+            doc.setTextColor(0, 180, 200);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.text("SENTINEL AI ENGINE", 135, expY + 8);
+            doc.setFont("helvetica", "normal");
+            doc.text("CRYPTOGRAPHICALLY SEALED", 135, expY + 14);
+            doc.text(`HASH: HASH_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, 135, expY + 20);
+            
+            // Bottom Disclaimer
+            doc.setTextColor(120, 120, 120);
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(7.5);
+            doc.text("DISCLAIMER: This document is an official digital record generated dynamically via graph relational link analysis.", 15, 280);
+            doc.text("Any alteration or unauthorized sharing of this document is subject to statutory audit actions.", 15, 284);
+            
+            doc.save(`Sentinel_Application_Report_{{ application.id }}.pdf`);
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -483,6 +483,37 @@ def get_all_applications():
     conn.close()
     return applications
 
+def get_paginated_applications(page=1, per_page=25, classification=None, search=None):
+    """Return a paginated slice of applications with total count."""
+    conn = get_db_connection()
+    where_clauses = []
+    params = []
+
+    if classification and classification != 'ALL':
+        where_clauses.append("classification = ?")
+        params.append(classification)
+    if search:
+        where_clauses.append("(name LIKE ? OR aadhaar LIKE ? OR scheme LIKE ?)")
+        like = f"%{search}%"
+        params.extend([like, like, like])
+
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    total = conn.execute(
+        f"SELECT COUNT(*) FROM applications {where_sql}", params
+    ).fetchone()[0]
+
+    offset = (page - 1) * per_page
+    applications = conn.execute(
+        f"SELECT * FROM applications {where_sql} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        params + [per_page, offset]
+    ).fetchall()
+
+    conn.close()
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    return applications, total, total_pages
+
+
 def get_application_by_id(app_id):
     conn = get_db_connection()
     application = conn.execute('SELECT * FROM applications WHERE id = ?', (app_id,)).fetchone()
@@ -496,12 +527,12 @@ def get_statistics():
     review = conn.execute("SELECT COUNT(*) FROM applications WHERE classification = 'REVIEW'").fetchone()[0]
     rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE classification = 'REJECT'").fetchone()[0]
     
-    # Get daily stats for last 7 days
+    # Get daily stats for last 90 days
     daily_stats = conn.execute('''
         SELECT DATE(created_at) as date, COUNT(*) as count, 
                SUM(CASE WHEN classification = 'REJECT' THEN 1 ELSE 0 END) as fraud_count
         FROM applications 
-        WHERE created_at >= DATE('now', '-7 days')
+        WHERE created_at >= DATE('now', '-90 days')
         GROUP BY DATE(created_at)
         ORDER BY date
     ''').fetchall()

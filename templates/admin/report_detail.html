@@ -6,6 +6,7 @@
     <title>Report Details - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -38,20 +39,22 @@
 
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">
-                            <i class="bi bi-flag me-2"></i>
-                            Fraud Report #{{ report.id }}
-                        </h4>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0 text-cyber">
+                            <i class="bi bi-flag me-2"></i>Fraud Report #{{ report.id }}
+                        </h5>
+                        <span class="badge bg-{{ 'warning text-dark' if report.report_status == 'pending' else 'success' if report.report_status == 'approved' else 'danger' if report.report_status == 'rejected' else 'info' }}">
+                            {{ report.report_status.upper() }}
+                        </span>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <h6>Reporter Information</h6>
-                                <table class="table table-borderless">
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <h6 class="text-secondary small font-cyber mb-2">REPORTER INFORMATION</h6>
+                                <table class="table table-borderless table-sm mb-0 text-light">
                                     <tr>
-                                        <td><strong>Name:</strong></td>
+                                        <td width="35%"><strong>Name:</strong></td>
                                         <td>{{ report.reporter_name }}</td>
                                     </tr>
                                     <tr>
@@ -61,88 +64,129 @@
                                 </table>
                             </div>
                             <div class="col-md-6">
-                                <h6>Report Details</h6>
-                                <table class="table table-borderless">
+                                <h6 class="text-secondary small font-cyber mb-2">REPORT DETAILS</h6>
+                                <table class="table table-borderless table-sm mb-0 text-light">
                                     <tr>
-                                        <td><strong>Fraud Type:</strong></td>
+                                        <td width="35%"><strong>Fraud Type:</strong></td>
                                         <td><span class="badge bg-secondary">{{ report.fraud_type }}</span></td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Status:</strong></td>
-                                        <td>
-                                            <span class="badge bg-{{ 'warning' if report.report_status == 'pending' else 'success' if report.report_status == 'resolved' else 'info' }}">
-                                                {{ report.report_status.upper() }}
-                                            </span>
-                                        </td>
+                                        <td><strong>Reported At:</strong></td>
+                                        <td><small class="text-muted">{{ report.created_at }}</small></td>
                                     </tr>
+                                    {% if report.resolved_at %}
+                                    <tr>
+                                        <td><strong>Resolved At:</strong></td>
+                                        <td><small class="text-muted">{{ report.resolved_at }}</small></td>
+                                    </tr>
+                                    {% endif %}
                                 </table>
                             </div>
                         </div>
 
-                        {% if report.reported_aadhaar %}
-                        <div class="alert alert-info">
-                            <strong>Reported Aadhaar:</strong> {{ report.reported_aadhaar }}
+                        {% if report.reported_aadhaar or report.reported_phone %}
+                        <div class="alert alert-info bg-dark border-info text-white mb-4">
+                            <h6 class="text-secondary small font-cyber mb-2"><i class="bi bi-shield-exclamation me-1"></i>REPORTED TARGETS</h6>
+                            {% if report.reported_aadhaar %}
+                            <div class="mb-1"><strong>Reported Aadhaar:</strong> <span class="font-cyber text-info">{{ report.reported_aadhaar }}</span></div>
+                            {% endif %}
+                            {% if report.reported_phone %}
+                            <div><strong>Reported Phone:</strong> <span class="font-cyber text-info">{{ report.reported_phone }}</span></div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
-                        <div class="mb-4">
-                            <h6>Description</h6>
-                            <div class="border p-3 bg-light">
-                                {{ report.description }}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>Reported At:</strong><br>
-                                <small class="text-muted">{{ report.created_at }}</small>
-                            </div>
-                            {% if report.resolved_at %}
-                            <div class="col-md-6">
-                                <strong>Resolved At:</strong><br>
-                                <small class="text-muted">{{ report.resolved_at }}</small>
-                            </div>
-                            {% endif %}
+                        <div class="mb-2">
+                            <h6 class="text-secondary small font-cyber mb-2">DESCRIPTION</h6>
+                            <div class="border border-secondary p-3 bg-dark text-light rounded" style="white-space: pre-wrap;">{{ report.description }}</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Actions</h5>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0 text-cyber"><i class="bi bi-tools me-2"></i>Actions Panel</h5>
                     </div>
                     <div class="card-body">
-                        {% if report.report_status != 'resolved' %}
+                        {% if report.report_status == 'pending' or report.report_status == 'resolved' %}
                         <form method="POST" action="/admin/report/{{ report.id }}/resolve">
-                            <button type="submit" class="btn btn-success w-100 mb-2">
-                                <i class="bi bi-check-circle me-2"></i>Mark as Resolved
-                            </button>
+                            <div class="mb-3">
+                                <label for="admin_notes" class="form-label text-secondary small font-cyber">ADMIN REVIEW NOTES</label>
+                                <textarea class="form-control bg-dark border-secondary text-white small" id="admin_notes" name="admin_notes" rows="3" placeholder="Enter notes or audit results...">{{ report.admin_notes or '' }}</textarea>
+                            </div>
+                            
+                            {% if report.reported_aadhaar or report.reported_phone %}
+                            <div class="mb-4 p-3 border border-secondary rounded bg-dark">
+                                <label class="form-label text-secondary small font-cyber d-block mb-2"><i class="bi bi-shield-slash me-1"></i>AUTO-BLACKLIST (ON APPROVE)</label>
+                                {% if report.reported_aadhaar %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="blacklist_aadhaar" name="blacklist_aadhaar" value="1" checked>
+                                    <label class="form-check-label text-light small" for="blacklist_aadhaar">
+                                        Blacklist Aadhaar: <span class="font-cyber text-info">{{ report.reported_aadhaar }}</span>
+                                    </label>
+                                </div>
+                                {% endif %}
+                                {% if report.reported_phone %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="blacklist_phone" name="blacklist_phone" value="1" checked>
+                                    <label class="form-check-label text-light small" for="blacklist_phone">
+                                        Blacklist Phone: <span class="font-cyber text-info">{{ report.reported_phone }}</span>
+                                    </label>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" name="action" value="approve" class="btn btn-cyber-success w-100">
+                                    <i class="bi bi-check-circle-fill me-2"></i>Approve & Blacklist
+                                </button>
+                                <button type="submit" name="action" value="resolve" class="btn btn-cyber-warning w-100">
+                                    <i class="bi bi-arrow-right-circle-fill me-2"></i>{% if report.report_status == 'resolved' %}Update Notes{% else %}Mark as Resolved{% endif %}
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn btn-cyber-danger w-100">
+                                    <i class="bi bi-x-circle-fill me-2"></i>Reject Report
+                                </button>
+                            </div>
                         </form>
                         {% else %}
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle-fill me-2"></i>
-                            This report has been resolved.
+                        <div class="alert alert-{{ 'success' if report.report_status == 'approved' else 'danger' }} bg-dark border-0 mb-4 py-3">
+                            <h6 class="alert-heading fw-bold mb-1">
+                                {% if report.report_status == 'approved' %}
+                                    <i class="bi bi-check-circle-fill me-2 text-success"></i>APPROVED
+                                {% else %}
+                                    <i class="bi bi-x-circle-fill me-2 text-danger"></i>REJECTED
+                                {% endif %}
+                            </h6>
+                            <p class="mb-0 small text-white-50">Report processing completed.</p>
+                        </div>
+                        
+                        {% if report.admin_notes %}
+                        <div class="mb-4">
+                            <label class="text-secondary small font-cyber d-block mb-1">ADMIN NOTES</label>
+                            <div class="border border-secondary p-3 bg-dark rounded text-light small" style="white-space: pre-wrap;">{{ report.admin_notes }}</div>
                         </div>
                         {% endif %}
+                        {% endif %}
                         
-                        <a href="/dashboard" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                        <a href="/admin/reports" class="btn btn-cyber w-100 mt-2">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Reports
                         </a>
                     </div>
                 </div>
 
-                <div class="card mt-3">
-                    <div class="card-header bg-warning">
-                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Next Steps</h6>
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0 text-cyber"><i class="bi bi-info-circle me-2"></i>Next Steps</h6>
                     </div>
                     <div class="card-body">
-                        <ul class="mb-0">
-                            <li>Verify the reported Aadhaar number</li>
-                            <li>Cross-check with application records</li>
-                            <li>Contact reporter if needed</li>
-                            <li>Take appropriate action</li>
+                        <ul class="mb-0 text-white-50 small ps-3">
+                            <li class="mb-1">Verify reported Aadhaar against register records.</li>
+                            <li class="mb-1">Cross-reference with known network topologies.</li>
+                            <li class="mb-1">Select <strong>Approve</strong> to automatically flag and blacklist targets.</li>
+                            <li>Select <strong>Reject</strong> to dismiss fake or malicious reports.</li>
                         </ul>
                     </div>
                 </div>

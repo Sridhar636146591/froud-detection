@@ -6,6 +6,7 @@
     <title>Citizen Reports - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -14,13 +15,15 @@
                 <i class="bi bi-shield-check me-2"></i>
                 <strong>Admin Panel</strong>
             </a>
-            <a href="/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <h2><i class="bi bi-flag me-2"></i>Citizen Fraud Reports</h2>
-        <p class="text-muted">Feature 11: Citizen Reporting System - Admin View</p>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2><i class="bi bi-flag me-2"></i>Citizen Fraud Reports</h2>
+            <a href="/dashboard" class="btn btn-cyber btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
+        <p class="text-muted mb-4">Feature 11: Citizen Reporting System - Admin View</p>
 
         <div class="card">
             <div class="card-body">
@@ -44,22 +47,27 @@
                             <td><span class="badge bg-secondary">{{ report.fraud_type }}</span></td>
                             <td>{{ report.description[:100] }}...</td>
                             <td>
-                                <span class="badge bg-{{ 'warning' if report.report_status == 'pending' else 'success' if report.report_status == 'resolved' else 'info' }}">
-                                    {{ report.report_status }}
+                                <span class="badge bg-{{ 'warning text-dark' if report.report_status == 'pending' else 'success' if report.report_status == 'approved' else 'danger' if report.report_status == 'rejected' else 'info' }}">
+                                    {{ report.report_status.upper() }}
                                 </span>
                             </td>
                             <td>{{ report.created_at }}</td>
                             <td>
-                                <a href="/admin/report/{{ report.id }}" class="btn btn-sm btn-primary">
+                                <a href="/admin/report/{{ report.id }}" class="btn btn-sm btn-cyber py-1 px-2" style="font-size: 0.8rem;">
                                     <i class="bi bi-eye"></i> View
                                 </a>
+                                {% if report.report_status == 'pending' %}
                                 <form method="POST" action="/admin/report/{{ report.id }}/resolve" style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-success" 
-                                            {% if report.report_status == 'resolved' %}disabled{% endif %}>
-                                        <i class="bi bi-check-circle"></i> 
-                                        {% if report.report_status == 'resolved' %}Resolved{% else %}Resolve{% endif %}
+                                    <input type="hidden" name="action" value="resolve">
+                                    <button type="submit" class="btn btn-sm btn-cyber-success py-1 px-2" style="font-size: 0.8rem;">
+                                        <i class="bi bi-check-circle"></i> Resolve
                                     </button>
                                 </form>
+                                {% else %}
+                                <button class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.8rem;" disabled>
+                                    <i class="bi bi-check-all"></i> Processed
+                                </button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

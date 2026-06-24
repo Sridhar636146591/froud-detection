@@ -3,89 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Verification - Fraud Detection</title>
+    <title>Biometric Forensics - Sentinel AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
+<body class="animate-fade-in">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cyber">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-shield-check me-2"></i>
-                <strong>Fraud Detection</strong>
+                <strong>SENTINEL AI</strong>
             </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Command Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2><i class="bi bi-person-bounding-box me-2"></i>Face Verification</h2>
-        <p class="text-muted">Feature 4: Deepfake & Face Spoof Detection</p>
+    <div class="container mt-4 mb-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-3">
+                <h2 class="font-cyber text-uppercase mb-0 tracking-wider"><i class="bi bi-person-bounding-box me-2 text-info"></i>Biometric Liveness Audit</h2>
+                <span class="badge-cyber info">FACIAL DEEPFAKE FORENSICS</span>
+            </div>
+            <a href="/dashboard" class="btn btn-cyber btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
+        <p class="text-secondary mb-4">Run face-recognition scanning to verify the claimant's identity. Detects deepfakes, print replays, and spoofing masks.</p>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Upload Photo</h5>
+        <div class="row g-4">
+            <!-- Camera & Scanner Pane -->
+            <div class="col-lg-6">
+                <div class="glass-card h-100">
+                    <div class="card-header-cyber">
+                        <h5>Biometric Capture Interface</h5>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label class="form-label">Photo Type</label>
-                                <select class="form-select">
-                                    <option>Live Capture</option>
-                                    <option>ID Photo</option>
-                                    <option>Selfie</option>
+                    <div class="card-body p-4 text-center">
+                        <!-- Biometric Scan Viewbox -->
+                        <div class="camera-container-cyber">
+                            <video id="cameraStream" class="camera-stream d-none" autoplay playsinline></video>
+                            
+                            <!-- Static placeholder when camera off -->
+                            <div id="cameraPlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-secondary">
+                                <i class="bi bi-person-circle fs-1 text-muted mb-2" style="opacity:0.35;"></i>
+                                <span class="small font-cyber text-muted">CAMERA OFFLINE</span>
+                            </div>
+
+                            <!-- Biometric grid and scanning line -->
+                            <div class="scanner-overlay">
+                                <div class="scanner-line"></div>
+                                <div class="scanner-grid-box"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-center mb-4">
+                            <button type="button" id="btnStartCamera" class="btn btn-cyber">
+                                <i class="bi bi-camera-fill me-2"></i>ACTIVATE WEB CAMERA
+                            </button>
+                            <button type="button" id="btnStopCamera" class="btn btn-outline-secondary border-secondary text-secondary d-none">
+                                <i class="bi bi-camera-video-off me-2"></i>DEACTIVATE
+                            </button>
+                        </div>
+
+                        <!-- Manual Upload Fallback -->
+                        <form method="POST" enctype="multipart/form-data" id="faceVerifyForm">
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-secondary small">Verification Mode</label>
+                                <select class="form-select" name="photo_type">
+                                    <option value="live">Live Web Capture Scan</option>
+                                    <option value="id_photo">Match against Aadhaar Registry Photo</option>
+                                    <option value="selfie">Claimant Identity selfie</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Upload Photo</label>
-                                <input type="file" class="form-control" accept=".jpg,.jpeg,.png">
+                            
+                            <div class="mb-4 text-start">
+                                <label class="form-label text-secondary small">Fallback File Upload (If camera offline)</label>
+                                <div id="drop-zone" class="drop-zone-cyber">
+                                    <input type="file" id="file-input" name="face_file" class="d-none" accept=".jpg,.jpeg,.png">
+                                    <div id="drop-zone-content">
+                                        <i class="bi bi-image text-secondary fs-2 d-block mb-1"></i>
+                                        <span class="d-block small text-white fw-semibold">Click to attach photo</span>
+                                    </div>
+                                    <div id="file-selected-state" class="d-none animate-fade-in">
+                                        <span id="selected-file-name" class="d-block small text-success fw-semibold truncate">selfie.jpg</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="alert alert-info">
-                                <i class="bi bi-camera me-2"></i>
-                                Or use live camera capture
+
+                            <!-- Processing overlays -->
+                            <div id="processingState" class="d-none animate-fade-in mb-3 alert alert-info bg-opacity-10 border-info text-info">
+                                <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                                <span class="font-cyber small tracking-wider">RUNNING DEEPFAKE &amp; SPOOF SCAN...</span>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-shield-check me-2"></i>Verify Identity
+
+                            <button type="submit" class="btn btn-cyber w-100 py-3 font-cyber">
+                                <i class="bi bi-shield-shaded me-2"></i>DECRYPT BIOMETRICS
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Detection Capabilities</h5>
+
+            <!-- Capabilities Panel -->
+            <div class="col-lg-6">
+                <div class="glass-card h-100">
+                    <div class="card-header-cyber" style="border-bottom-color: var(--amber-gold);">
+                        <h5 class="text-warning"><i class="bi bi-shield-exclamation me-2"></i>ML Spoof Classifier</h5>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <i class="bi bi-check-circle text-success me-2"></i>
-                                Liveness Detection
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-check-circle text-success me-2"></i>
-                                Deepfake Detection
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-check-circle text-success me-2"></i>
-                                Screen Replay Attack Detection
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-check-circle text-success me-2"></i>
-                                2D Mask Detection
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-check-circle text-success me-2"></i>
-                                Lighting Consistency Check
-                            </li>
-                        </ul>
+                    <div class="card-body p-4">
+                        <p class="text-secondary small mb-4"> Facials are cross-examined across high-dimensional features to query liveness status indicators:</p>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <h6 class="text-white font-cyber mb-0 small">Micro-texture Liveness Evaluation</h6>
+                                    <p class="small text-secondary mb-0">Detects screen pixel boundaries or print grids to stop replay attacks.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <h6 class="text-white font-cyber mb-0 small">Face Mask Distortion check</h6>
+                                    <p class="small text-secondary mb-0">Identifies alignment border distortions and eye-blink patterns to detect 2D/3D masks.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <h6 class="text-white font-cyber mb-0 small">Color Channel &amp; Lighting audit</h6>
+                                    <p class="small text-secondary mb-0">Analyzes lighting consistency across forehead and cheek vectors to verify real spatial depth.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <div>
+                                    <h6 class="text-white font-cyber mb-0 small">Deepfake AI Signature Scan</h6>
+                                    <p class="small text-secondary mb-0">Scans eye-pupil geometries and ear/neck boundaries to identify generative AI artifacts.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Security Footer -->
+    <footer class="footer-cyber text-center">
+        <div class="container">
+            <small>
+                <i class="bi bi-shield-check text-info me-1"></i>
+                Risk Decision Support &amp; Cyber-Forensics Sentinel System | Govt Welfare Audit
+            </small>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const video = document.getElementById('cameraStream');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const btnStart = document.getElementById('btnStartCamera');
+        const btnStop = document.getElementById('btnStopCamera');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const dropContent = document.getElementById('drop-zone-content');
+        const fileState = document.getElementById('file-selected-state');
+        const fileNameSpan = document.getElementById('selected-file-name');
+        const verifyForm = document.getElementById('faceVerifyForm');
+        const processingAlert = document.getElementById('processingState');
+
+        let streamObj = null;
+
+        // Camera Activation
+        btnStart.addEventListener('click', async () => {
+            try {
+                streamObj = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                video.srcObject = streamObj;
+                video.classList.remove('d-none');
+                placeholder.classList.add('d-none');
+                btnStart.classList.add('d-none');
+                btnStop.classList.remove('d-none');
+            } catch (err) {
+                console.error("Camera access failed: ", err);
+                alert("Facial capture hardware unavailable or permission denied. Please use the file upload fallback.");
+            }
+        });
+
+        // Camera Deactivation
+        btnStop.addEventListener('click', () => {
+            if (streamObj) {
+                streamObj.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                video.classList.add('d-none');
+                placeholder.classList.remove('d-none');
+                btnStart.classList.remove('d-none');
+                btnStop.classList.add('d-none');
+                streamObj = null;
+            }
+        });
+
+        // Fallback File Upload Drag and Drop
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            updateFileSelected();
+        });
+
+        function updateFileSelected() {
+            if (fileInput.files.length > 0) {
+                dropContent.classList.add('d-none');
+                fileState.classList.remove('d-none');
+                fileNameSpan.textContent = fileInput.files[0].name;
+            }
+        }
+
+        // Show Processing animation on form submission
+        verifyForm.addEventListener('submit', () => {
+            processingAlert.classList.remove('d-none');
+        });
+    </script>
 </body>
 </html>

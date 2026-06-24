@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Application - Fraud Detection</title>
+    <title>New Welfare Claim Verification - Sentinel AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="animate-fade-in">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cyber">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-shield-check me-2"></i>
-                <strong>Fraud Detection</strong>
+                <strong>SENTINEL AI</strong>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -23,7 +23,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/dashboard">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            <i class="bi bi-speedometer2 me-1"></i>Command Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
@@ -31,22 +31,22 @@
                             <i class="bi bi-plus-circle me-1"></i>New Application
                         </a>
                     </li>
-                </ul>
-                <ul class="navbar-nav">
                     {% if session.role == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/users">
-                            <i class="bi bi-people me-1"></i>Manage Users
+                        <a class="nav-link" href="/admin/manual-approve">
+                            <i class="bi bi-patch-check me-1"></i>Manual Approve
                         </a>
                     </li>
                     {% endif %}
+                </ul>
+                <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i>{{ session.full_name }}
+                        <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-badge me-1"></i>{{ session.full_name }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
                             <li><a class="dropdown-item" href="/profile">
-                                <i class="bi bi-person me-2"></i>My Profile
+                                <i class="bi bi-person me-2"></i>Officer Profile
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="/logout">
@@ -59,82 +59,82 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert" style="font-size: 0.9rem; border-left: 4px solid var(--cyber-blue);">
+                                <i class="bi bi-info-circle me-2"></i>{{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
 
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Welfare Scheme Application</h4>
+                <!-- Main Entry Card -->
+                <div class="glass-card">
+                    <div class="card-header-cyber">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-info"></i>Welfare Scheme Verification Entry</h5>
                     </div>
-                    <div class="card-body">
-
+                    <div class="card-body p-4">
                         <form action="/submit" method="POST" id="applicationForm">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label">
+                                    <label for="name" class="form-label text-secondary small">
                                         <i class="bi bi-person me-1"></i>Full Name *
                                     </label>
-                                    <input type="text" class="form-control" id="name" name="name" required 
-                                           placeholder="Enter full name as per Aadhaar">
-                                    <div class="form-text">Name should match Aadhaar card</div>
+                                    <input type="text" class="form-control form-control-cyber" id="name" name="name" required 
+                                           placeholder="Enter claimant name as per Aadhaar">
+                                    <div class="form-text text-muted small">Must exactly match legal identifier documentation.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="aadhaar" class="form-label">
+                                    <label for="aadhaar" class="form-label text-secondary small">
                                         <i class="bi bi-credit-card me-1"></i>Aadhaar Number *
                                     </label>
-                                    <input type="text" class="form-control" id="aadhaar" name="aadhaar" 
+                                    <input type="text" class="form-control form-control-cyber" id="aadhaar" name="aadhaar" 
                                            required pattern="[0-9]{12}" maxlength="12"
-                                           placeholder="12-digit Aadhaar number">
-                                    <div class="form-text">Enter 12-digit Aadhaar number</div>
+                                           placeholder="12-digit Aadhaar UID number">
+                                    <div class="form-text text-muted small">12-digit numeric identifier.</div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="phone" class="form-label">
+                                    <label for="phone" class="form-label text-secondary small">
                                         <i class="bi bi-telephone me-1"></i>Phone Number *
                                     </label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                    <input type="tel" class="form-control form-control-cyber" id="phone" name="phone" 
                                            required pattern="[0-9]{10}" maxlength="10"
                                            placeholder="10-digit mobile number">
-                                    <div class="form-text">Enter 10-digit mobile number</div>
+                                    <div class="form-text text-muted small">10-digit mobile identifier.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="income" class="form-label">
-                                        <i class="bi bi-currency-rupee me-1"></i>Annual Income (₹) *
+                                    <label for="income" class="form-label text-secondary small">
+                                        <i class="bi bi-currency-rupee me-1"></i>Annual Family Income (₹) *
                                     </label>
-                                    <input type="number" class="form-control" id="income" name="income" 
-                                           required min="0" placeholder="Annual income">
-                                    <div class="form-text">Enter annual family income</div>
+                                    <input type="number" class="form-control form-control-cyber" id="income" name="income" 
+                                           required min="0" placeholder="Annual income in INR">
+                                    <div class="form-text text-muted small">Total aggregate family income.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="age" class="form-label">
-                                        <i class="bi bi-calendar me-1"></i>Age *
+                                    <label for="age" class="form-label text-secondary small">
+                                        <i class="bi bi-calendar me-1"></i>Claimant Age *
                                     </label>
-                                    <input type="number" class="form-control" id="age" name="age" 
+                                    <input type="number" class="form-control form-control-cyber" id="age" name="age" 
                                            required min="18" max="120" placeholder="Age in years">
-                                    <div class="form-text">Applicant age (18-120)</div>
+                                    <div class="form-text text-muted small">Applicant age (18-120).</div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="gender" class="form-label">
+                                    <label for="gender" class="form-label text-secondary small">
                                         <i class="bi bi-gender-ambiguous me-1"></i>Gender *
                                     </label>
-                                    <select class="form-select" id="gender" name="gender" required>
+                                    <select class="form-select form-control-cyber" id="gender" name="gender" required>
                                         <option value="">Select Gender</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
@@ -142,23 +142,23 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="district" class="form-label">
+                                    <label for="district" class="form-label text-secondary small">
                                         <i class="bi bi-geo-alt me-1"></i>District *
                                     </label>
-                                    <input type="text" class="form-control" id="district" name="district" 
+                                    <input type="text" class="form-control form-control-cyber" id="district" name="district" 
                                            required placeholder="Enter district name">
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="address" class="form-label">Address *</label>
-                                <textarea class="form-control" id="address" name="address" rows="3" required
-                                          placeholder="Enter complete residential address"></textarea>
+                                <label for="address" class="form-label text-secondary small">Complete Residential Address *</label>
+                                <textarea class="form-control form-control-cyber" id="address" name="address" rows="3" required
+                                          placeholder="Enter complete residential address details"></textarea>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="scheme" class="form-label">Scheme Applied For *</label>
-                                <select class="form-select" id="scheme" name="scheme" required>
+                            <div class="mb-4">
+                                <label for="scheme" class="form-label text-secondary small">Welfare Scheme Applied For *</label>
+                                <select class="form-select form-control-cyber" id="scheme" name="scheme" required>
                                     <option value="">Select a scheme</option>
                                     <option value="PM-KISAN">PM-KISAN</option>
                                     <option value="MGNREGA">MGNREGA</option>
@@ -171,36 +171,52 @@
                                 </select>
                             </div>
 
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    Submit Application & Check for Fraud
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-cyber w-100 py-3 font-cyber">
+                                <i class="bi bi-shield-shaded me-2"></i>SUBMIT CLAIM &amp; DEPLOY AI DETECTORS
+                            </button>
                         </form>
                     </div>
                 </div>
 
-                <div class="card mt-4 shadow-sm">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">About the Fraud Detection System</h5>
+                <!-- Explanation Summary -->
+                <div class="glass-card mt-4">
+                    <div class="card-header-cyber" style="border-bottom-color: var(--cyan-info);">
+                        <h5 class="mb-0 text-info"><i class="bi bi-cpu me-2"></i>Gateway Sentinel Verification Engine</h5>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-2">This AI-powered system detects fraudulent applications using:</p>
-                        <ul class="mb-0">
-                            <li><strong>Rule-based checks:</strong> Duplicate Aadhaar, phone validation, income verification</li>
-                            <li><strong>Machine Learning:</strong> Isolation Forest algorithm for anomaly detection</li>
-                            <li><strong>Risk Scoring:</strong> 0-100 score with explainable results</li>
-                        </ul>
-                        <hr>
-                        <div class="row text-center">
+                    <div class="card-body p-4 text-secondary">
+                        <p class="mb-3">Upon submission, this claim initiates a 13-stage background check mapping:</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    <span>Duplication Checks</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    <span>Financial Ingress Caps</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    <span>3D Connection Ring Detections</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    <span>Isolation Forest Anomaly Scoring</span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="border-secondary">
+                        <div class="row text-center mt-3 g-2">
                             <div class="col-4">
-                                <span class="badge bg-success fs-6">0-39: APPROVE</span>
+                                <span class="badge-cyber success w-100">0-39: AUTO APPROVE</span>
                             </div>
                             <div class="col-4">
-                                <span class="badge bg-warning text-dark fs-6">40-69: REVIEW</span>
+                                <span class="badge-cyber warning w-100">40-69: AUDIT REVIEW</span>
                             </div>
                             <div class="col-4">
-                                <span class="badge bg-danger fs-6">70-100: REJECT</span>
+                                <span class="badge-cyber danger w-100">70-100: AUTO REJECT</span>
                             </div>
                         </div>
                     </div>
@@ -209,15 +225,17 @@
         </div>
     </div>
 
-    <footer class="mt-5 py-3 bg-light text-center">
+    <!-- Security Footer -->
+    <footer class="footer-cyber text-center">
         <div class="container">
-            <small class="text-muted">
-                <i class="bi bi-shield-check me-1"></i>
-                AI-Powered Fraud Detection System for Government Schemes | 2024-25
+            <small>
+                <i class="bi bi-shield-check text-info me-1"></i>
+                Risk Decision Support &amp; Cyber-Forensics Sentinel System | Govt Welfare Audit
             </small>
         </div>
     </footer>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('applicationForm').addEventListener('submit', function(e) {
@@ -225,13 +243,13 @@
             const phone = document.getElementById('phone').value;
             
             if (!/^\d{12}$/.test(aadhaar)) {
-                alert('Please enter a valid 12-digit Aadhaar number');
+                alert('Invalid payload: Please enter a valid 12-digit Aadhaar number');
                 e.preventDefault();
                 return;
             }
             
             if (!/^\d{10}$/.test(phone)) {
-                alert('Please enter a valid 10-digit phone number');
+                alert('Invalid payload: Please enter a valid 10-digit phone number');
                 e.preventDefault();
                 return;
             }

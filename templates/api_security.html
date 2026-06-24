@@ -3,139 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Security - Fraud Detection</title>
+    <title>API Security & Developer Portal - Sentinel AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .playground-select {
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .playground-select.active {
+            background: rgba(0, 240, 255, 0.08) !important;
+            border-left-color: var(--cyber-blue);
+            color: white !important;
+        }
+        .playground-select:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+        .api-method {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .api-method.get {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--emerald-green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .api-method.post {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--cyan-info);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+        .playground-editor {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            background: #020617;
+            color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            font-size: 0.85rem;
+        }
+        .playground-editor:focus {
+            outline: none;
+            border-color: var(--cyber-blue);
+            box-shadow: 0 0 10px var(--cyber-blue-glow);
+        }
+    </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
+<body class="animate-fade-in">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cyber">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-shield-check me-2"></i>
-                <strong>Fraud Detection</strong>
+                <strong>SENTINEL AI</strong>
             </a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <a class="nav-link" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Command Dashboard
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/api-security">API Security</a>
+                        <a class="nav-link" href="/new-application">
+                            <i class="bi bi-plus-circle me-1"></i>New Application
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock me-1"></i>Advanced Forensics
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="/network-analysis">
+                                <i class="bi bi-diagram-3 me-2 text-info"></i>3D Link Analysis
+                            </a></li>
+                            <li><a class="dropdown-item" href="/pending-verifications">
+                                <i class="bi bi-check2-square me-2 text-warning"></i>Pending Verification
+                            </a></li>
+                            <li><a class="dropdown-item" href="/fraud-simulation">
+                                <i class="bi bi-cpu me-2 text-success"></i>Engine Simulation
+                            </a></li>
+                            <li><a class="dropdown-item" href="/audit-log">
+                                <i class="bi bi-clock-history me-2 text-secondary"></i>Audit Trail
+                            </a></li>
+                            <li><a class="dropdown-item active" href="/api-security">
+                                <i class="bi bi-shield-shaded me-2 text-danger"></i>API Security Shield
+                            </a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2><i class="bi bi-shield-lock me-2"></i>API Security Monitor</h2>
-        <p class="text-muted">Feature 19: Real-time API fraud shield and access monitoring</p>
+    <div class="container-fluid mt-4 px-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-3">
+                <h2 class="font-cyber text-uppercase mb-0 tracking-wider"><i class="bi bi-shield-shaded me-2 text-danger"></i>API Security Shield &amp; Dev Portal</h2>
+                <span class="badge-cyber danger">GATEWAY PROTECTED</span>
+            </div>
+            <a href="/dashboard" class="btn btn-cyber btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
+        <p class="text-secondary mb-4">Monitor secure endpoints and interactively query the decision API gateway.</p>
 
-        <div class="row mb-4">
+        <!-- Stats Cards -->
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body text-center">
-                        <h3><i class="bi bi-shield-check"></i></h3>
-                        <h5>Protected</h5>
-                        <p class="mb-0">Rate Limiting Active</p>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--emerald-green);">
+                    <div>
+                        <span class="text-secondary small font-cyber">SHIELD STATUS</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-success">ACTIVE</h4>
                     </div>
+                    <i class="bi bi-shield-check text-success fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body text-center">
-                        <h3><i class="bi bi-speedometer"></i></h3>
-                        <h5>100ms</h5>
-                        <p class="mb-0">Avg Response Time</p>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-secondary small font-cyber">LATENCY</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-white">94 ms</h4>
                     </div>
+                    <i class="bi bi-speedometer text-info fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-warning text-dark">
-                    <div class="card-body text-center">
-                        <h3><i class="bi bi-exclamation-triangle"></i></h3>
-                        <h5>{{ suspicious_ips|length }}</h5>
-                        <p class="mb-0">Suspicious IPs</p>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--amber-gold);">
+                    <div>
+                        <span class="text-secondary small font-cyber">SUSPICIOUS IPs</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-warning">{{ suspicious_ips|length }}</h4>
                     </div>
+                    <i class="bi bi-exclamation-triangle text-warning fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-danger text-white">
-                    <div class="card-body text-center">
-                        <h3><i class="bi bi-ban"></i></h3>
-                        <h5>0</h5>
-                        <p class="mb-0">Blocked Today</p>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--crimson-red);">
+                    <div>
+                        <span class="text-secondary small font-cyber">SHIELD BLOCKS</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-danger">0</h4>
                     </div>
+                    <i class="bi bi-ban text-danger fs-3"></i>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="bi bi-graph-up me-2"></i>API Endpoint Activity (24h)</h5>
+        <!-- Activity Monitor & IP list -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="glass-card h-100">
+                    <div class="card-header-cyber">
+                        <span><i class="bi bi-graph-up me-2 text-info"></i>API Activity Feed (24h)</span>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         {% if api_stats %}
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Endpoint</th>
-                                    <th>Requests</th>
-                                    <th>Rate Limit Hits</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stat in api_stats %}
-                                <tr>
-                                    <td><code>{{ stat.endpoint }}</code></td>
-                                    <td>{{ stat.request_count }}</td>
-                                    <td>
-                                        {% if stat.rate_limit_violations > 0 %}
-                                        <span class="badge bg-danger">{{ stat.rate_limit_violations }}</span>
-                                        {% else %}
-                                        <span class="badge bg-success">0</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if stat.rate_limit_violations > 10 %}
-                                        <span class="badge bg-danger">At Risk</span>
-                                        {% else %}
-                                        <span class="badge bg-success">Normal</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table-cyber">
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Volume</th>
+                                        <th>Rate Limit Violations</th>
+                                        <th>Gateway Health</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in api_stats %}
+                                    <tr>
+                                        <td><code>{{ stat.endpoint }}</code></td>
+                                        <td class="font-cyber fw-bold text-white">{{ stat.request_count }} reqs</td>
+                                        <td>
+                                            {% if stat.rate_limit_violations > 0 %}
+                                            <span class="badge-cyber danger">{{ stat.rate_limit_violations }} hits</span>
+                                            {% else %}
+                                            <span class="badge-cyber success">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if stat.rate_limit_violations > 10 %}
+                                            <span class="badge-cyber danger">RISK SPIKE</span>
+                                            {% else %}
+                                            <span class="badge-cyber success">HEALTHY</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                         {% else %}
-                        <div class="alert alert-light">
-                            <i class="bi bi-info-circle me-2"></i>No API activity recorded yet.
+                        <div class="p-4 text-center text-secondary">
+                            <i class="bi bi-info-circle fs-3 d-block mb-2"></i>No API activity recorded in ledger.
                         </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-warning">
-                    <div class="card-header bg-warning text-dark">
-                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Suspicious IPs</h5>
+
+            <!-- Suspicious IP List -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100">
+                    <div class="card-header-cyber" style="border-bottom-color: var(--amber-gold);">
+                        <span><i class="bi bi-exclamation-triangle me-2 text-warning"></i>IP Threat Analysis</span>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         {% if suspicious_ips %}
-                        <ul class="list-group list-group-flush">
+                        <ul class="list-group list-group-flush bg-transparent">
                             {% for ip in suspicious_ips %}
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>{{ ip.ip_address }}</span>
-                                <span class="badge bg-danger">{{ ip.request_count }}</span>
+                            <li class="list-group-item bg-transparent text-secondary border-secondary d-flex justify-content-between align-items-center py-3">
+                                <span class="font-cyber text-white">{{ ip.ip_address }}</span>
+                                <span class="badge-cyber danger">{{ ip.request_count }} reqs/hr</span>
                             </li>
                             {% endfor %}
                         </ul>
                         {% else %}
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle me-2"></i>No suspicious IPs detected.
+                        <div class="p-5 text-center text-secondary">
+                            <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3" style="opacity:0.4;"></i>
+                            <p class="mb-0">Zero IP threats or rapid scanning activities detected on node.</p>
                         </div>
                         {% endif %}
                     </div>
@@ -143,29 +237,237 @@
             </div>
         </div>
 
-        <div class="card mt-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Security Features Active</h5>
+        <!-- Interactive API Playground -->
+        <div class="glass-card p-4 mb-4">
+            <h4 class="font-cyber text-uppercase text-info mb-3 small tracking-wider"><i class="bi bi-terminal me-2"></i>API Live Playground Console</h4>
+            <p class="text-secondary small mb-4">Test endpoints in real-time. Make active queries against local database schemas and ML classifiers.</p>
+
+            <div class="row g-4">
+                <!-- Endpoint Selector -->
+                <div class="col-md-4">
+                    <div class="list-group bg-transparent border border-secondary rounded-3 overflow-hidden">
+                        <div class="list-group-item bg-transparent text-secondary font-cyber border-secondary p-3 small fw-bold">SELECT ROUTE</div>
+                        
+                        <div class="list-group-item bg-transparent text-secondary border-secondary p-3 playground-select active" onclick="selectRoute('get_stats', 'GET', '/api/stats', '')">
+                            <span class="api-method get">GET</span><code>/api/stats</code>
+                            <div class="small text-muted mt-1">Fetch aggregate welfare &amp; risk stats</div>
+                        </div>
+                        
+                        <div class="list-group-item bg-transparent text-secondary border-secondary p-3 playground-select" onclick="selectRoute('get_apps', 'GET', '/api/applications', '')">
+                            <span class="api-method get">GET</span><code>/api/applications</code>
+                            <div class="small text-muted mt-1">List recent claimant audit records</div>
+                        </div>
+
+                        <div class="list-group-item bg-transparent text-secondary border-secondary p-3 playground-select" onclick="selectRoute('post_bot', 'POST', '/api/bot-check', '{\n  &quot;mouse_movements&quot;: 54,\n  &quot;typing_speed&quot;: 120,\n  &quot;time_on_page&quot;: 18.5,\n  &quot;form_interactions&quot;: 4\n}')">
+                            <span class="api-method post">POST</span><code>/api/bot-check</code>
+                            <div class="small text-muted mt-1">Evaluate client bot probability score</div>
+                        </div>
+
+                        <div class="list-group-item bg-transparent text-secondary border-secondary p-3 playground-select" onclick="selectRoute('post_behavior', 'POST', '/api/track-behavior', '{\n  &quot;session_id&quot;: &quot;mock_session_123&quot;,\n  &quot;mouse_movements&quot;: 42,\n  &quot;typing_speed&quot;: 150,\n  &quot;time_on_page&quot;: 25,\n  &quot;form_interactions&quot;: 5,\n  &quot;bot_probability&quot;: 0.05\n}')">
+                            <span class="api-method post">POST</span><code>/api/track-behavior</code>
+                            <div class="small text-muted mt-1">Commit client behavioral footprints</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters Editor & Request trigger -->
+                <div class="col-md-4">
+                    <div class="d-flex flex-column h-100 justify-content-between">
+                        <div>
+                            <h6 class="font-cyber text-white mb-2">Request Body (JSON)</h6>
+                            <textarea class="playground-editor font-cyber" id="payload-textarea" readonly>// Selected endpoint requires no request body</textarea>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-cyber w-100" onclick="sendApiRequest()">
+                                <i class="bi bi-play-fill me-2"></i>EXECUTE GATEWAY QUERY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Console & Code Generator -->
+                <div class="col-md-4">
+                    <h6 class="font-cyber text-white mb-2">JSON Response Status: <span id="response-status" class="text-secondary">---</span></h6>
+                    <div class="terminal-console mb-3" style="height: 200px;">
+                        <div class="terminal-header">
+                            <div class="terminal-dot red"></div>
+                            <div class="terminal-dot yellow"></div>
+                            <div class="terminal-dot green"></div>
+                        </div>
+                        <div class="terminal-text font-cyber" id="response-console">// Executed response prints here</div>
+                    </div>
+
+                    <!-- Code Snippets Tab -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-secondary small font-cyber">INTEGRATION CODE</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary btn-sm py-0 active" id="btn-curl" onclick="setCodeLang('curl')">cURL</button>
+                            <button class="btn btn-outline-secondary btn-sm py-0" id="btn-js" onclick="setCodeLang('js')">JS</button>
+                            <button class="btn btn-outline-secondary btn-sm py-0" id="btn-python" onclick="setCodeLang('python')">Py</button>
+                        </div>
+                    </div>
+                    <pre class="bg-black text-info p-2 rounded small overflow-auto font-cyber mb-0" style="max-height: 80px; font-size: 0.75rem;"><code id="code-snippet">curl http://localhost:5000/api/stats</code></pre>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h6><i class="bi bi-speedometer2 me-2"></i>Rate Limiting</h6>
-                        <p class="small">100 requests per minute per IP</p>
+        </div>
+
+        <!-- active security controls card -->
+        <div class="glass-card p-4 mb-5">
+            <h5 class="font-cyber text-uppercase text-secondary mb-3 small tracking-widest">Active Security Gateways</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-speedometer2 text-info fs-3"></i>
+                        <div>
+                            <h6 class="text-white font-cyber mb-1">Rate Limiter</h6>
+                            <p class="small text-secondary mb-0">Blocks client IPs executing &gt;100 requests per minute dynamically.</p>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <h6><i class="bi bi-key me-2"></i>API Key Validation</h6>
-                        <p class="small">All requests require valid API key</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-key text-info fs-3"></i>
+                        <div>
+                            <h6 class="text-white font-cyber mb-1">Session Token Gate</h6>
+                            <p class="small text-secondary mb-0">Enforces JWT-grade session token validation on administrative feeds.</p>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <h6><i class="bi bi-robot me-2"></i>Bot Detection</h6>
-                        <p class="small">Automated scraping protection</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-robot text-info fs-3"></i>
+                        <div>
+                            <h6 class="text-white font-cyber mb-1">Bot Shield Anomaly</h6>
+                            <p class="small text-secondary mb-0">Correlates browser event timestamps and typing speeds via isolation forest.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Security Footer -->
+    <footer class="footer-cyber text-center">
+        <div class="container">
+            <small>
+                <i class="bi bi-shield-check text-info me-1"></i>
+                Risk Decision Support &amp; Cyber-Forensics Sentinel System | Govt Welfare Audit
+            </small>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Current state of API playground
+        let currentRoute = 'get_stats';
+        let currentMethod = 'GET';
+        let currentPath = '/api/stats';
+        let currentSnippetLang = 'curl';
+
+        // Select an API route to test
+        function selectRoute(key, method, path, defaultPayload) {
+            // Update active state in list
+            document.querySelectorAll('.playground-select').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            currentRoute = key;
+            currentMethod = method;
+            currentPath = path;
+
+            const textarea = document.getElementById('payload-textarea');
+            if (method === 'GET') {
+                textarea.value = '// Selected endpoint requires no request body';
+                textarea.readOnly = true;
+            } else {
+                textarea.value = defaultPayload;
+                textarea.readOnly = false;
+            }
+
+            updateCodeSnippet();
+        }
+
+        // Send request to Flask API endpoint
+        function sendApiRequest() {
+            const textarea = document.getElementById('payload-textarea');
+            const statusLabel = document.getElementById('response-status');
+            const consoleBox = document.getElementById('response-console');
+
+            statusLabel.textContent = 'CONNECTING...';
+            statusLabel.className = 'text-warning';
+
+            let options = {
+                method: currentMethod,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (currentMethod === 'POST') {
+                try {
+                    options.body = JSON.stringify(JSON.parse(textarea.value));
+                } catch(e) {
+                    statusLabel.textContent = 'BAD JSON';
+                    statusLabel.className = 'text-danger';
+                    consoleBox.textContent = `Error: Invalid request JSON payload.\nDetail: ${e.message}`;
+                    return;
+                }
+            }
+
+            fetch(currentPath, options)
+                .then(res => {
+                    statusLabel.textContent = `${res.status} ${res.statusText}`;
+                    statusLabel.className = res.ok ? 'text-success' : 'text-danger';
+                    return res.json();
+                })
+                .then(data => {
+                    consoleBox.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    statusLabel.textContent = 'FAILED';
+                    statusLabel.className = 'text-danger';
+                    consoleBox.textContent = `Network Error: Could not connect to target gateway.\nDetail: ${err.message}`;
+                });
+        }
+
+        // Set code snippet language
+        function setCodeLang(lang) {
+            document.getElementById('btn-curl').classList.remove('active');
+            document.getElementById('btn-js').classList.remove('active');
+            document.getElementById('btn-python').classList.remove('active');
+
+            document.getElementById(`btn-${lang}`).classList.add('active');
+            currentSnippetLang = lang;
+            updateCodeSnippet();
+        }
+
+        // Generate and update the code snippet
+        function updateCodeSnippet() {
+            const host = window.location.origin;
+            const url = `${host}${currentPath}`;
+            const snippetBox = document.getElementById('code-snippet');
+            const body = document.getElementById('payload-textarea').value;
+
+            if (currentSnippetLang === 'curl') {
+                if (currentMethod === 'GET') {
+                    snippetBox.textContent = `curl ${url}`;
+                } else {
+                    snippetBox.textContent = `curl -X POST ${url} \\\n  -H "Content-Type: application/json" \\\n  -d '${body.replace(/\n/g, '')}'`;
+                }
+            } else if (currentSnippetLang === 'js') {
+                if (currentMethod === 'GET') {
+                    snippetBox.textContent = `fetch("${url}")\n  .then(r => r.json())\n  .then(data => console.log(data));`;
+                } else {
+                    snippetBox.textContent = `fetch("${url}", {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify(${body.replace(/\n/g, '')})\n}).then(r => r.json());`;
+                }
+            } else if (currentSnippetLang === 'python') {
+                if (currentMethod === 'GET') {
+                    snippetBox.textContent = `import requests\nres = requests.get("${url}")\nprint(res.json())`;
+                } else {
+                    snippetBox.textContent = `import requests\npayload = ${body}\nres = requests.post("${url}", json=payload)\nprint(res.json())`;
+                }
+            }
+        }
+    </script>
 </body>
 </html>

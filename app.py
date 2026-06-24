@@ -10,9 +10,36 @@ import secrets
 import random
 import hashlib
 from datetime import datetime, timedelta
+from flasgger import Swagger, swag_from
 
 app = Flask(__name__)
 app.secret_key = 'fraud_detection_secret_key_change_in_production'
+
+# Swagger / OpenAPI configuration
+swagger_config = {
+    'headers': [],
+    'specs': [{
+        'endpoint': 'apispec',
+        'route': '/api/docs/apispec.json',
+        'rule_filter': lambda rule: rule.rule.startswith('/api/v1'),
+        'model_filter': lambda tag: True,
+    }],
+    'static_url_path': '/flasgger_static',
+    'swagger_ui': True,
+    'specs_route': '/api/docs',
+}
+swagger_template = {
+    'info': {
+        'title': 'FraudShield API',
+        'description': 'REST API for the Government Welfare Fraud Detection System',
+        'version': '1.0.0',
+        'contact': {'name': 'FraudShield Admin'},
+    },
+    'securityDefinitions': {
+        'SessionAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'session'}
+    },
+}
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 # Initialize database on startup
 db.init_db()
@@ -418,11 +445,32 @@ def application_result():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    """Main dashboard with server-side pagination."""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
+    classification = request.args.get('classification', 'ALL')
+    search = request.args.get('search', '').strip()
+
+    per_page = max(10, min(100, per_page))  # clamp between 10-100
+    page = max(1, page)
+
+    applications, total, total_pages = db.get_paginated_applications(
+        page=page, per_page=per_page,
+        classification=classification if classification != 'ALL' else None,
+        search=search or None
+    )
     stats = db.get_statistics()
-    applications = db.get_all_applications()
-    return render_template('dashboard.html', 
-                         stats=stats, 
-                         applications=applications)
+    return render_template('dashboard.html',
+                         stats=stats,
+                         applications=applications,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         has_prev=page > 1,
+                         has_next=page < total_pages,
+                         classification=classification,
+                         search=search)
 
 @app.route('/details/<int:app_id>')
 @login_required
@@ -502,8 +550,8 @@ def admin_create_user():
     return redirect(url_for('admin_users'))
 
 @app.route('/api/stats')
-def api_stats():
-    """API endpoint for dashboard statistics"""
+def legacy_api_stats():
+    """Legacy API endpoint for dashboard statistics (use /api/v1/stats instead)"""
     stats = db.get_statistics()
     return jsonify(stats)
 
@@ -681,17 +729,93 @@ def view_report(report_id):
 @app.route('/admin/report/<int:report_id>/resolve', methods=['POST'])
 @admin_required
 def resolve_report(report_id):
-    """Mark a citizen report as resolved"""
+    """Perform action on citizen report (approve, reject, resolve)"""
+    action = request.form.get('action', 'resolve')  # Default to 'resolve' if not provided
+    admin_notes = request.form.get('admin_notes', '')
+    blacklist_aadhaar = request.form.get('blacklist_aadhaar')
+    blacklist_phone = request.form.get('blacklist_phone')
+    
+    if action not in ['approve', 'reject', 'resolve']:
+        flash('Invalid action requested.', 'error')
+        return redirect(url_for('view_report', report_id=report_id))
+    
+    # Determine new status
+    status_map = {
+        'approve': 'approved',
+        'reject': 'rejected',
+        'resolve': 'resolved'
+    }
+    new_status = status_map[action]
+    
     conn = db.get_db_connection()
+    
+    # Fetch report to get details
+    report = conn.execute('SELECT * FROM citizen_reports WHERE id = ?', (report_id,)).fetchone()
+    if not report:
+        conn.close()
+        flash('Report not found!', 'error')
+        return redirect(url_for('admin_reports'))
+    
+    # Update report status and notes
     conn.execute('''
         UPDATE citizen_reports 
-        SET report_status = 'resolved', resolved_at = CURRENT_TIMESTAMP
+        SET report_status = ?, admin_notes = ?, resolved_at = CURRENT_TIMESTAMP
         WHERE id = ?
-    ''', (report_id,))
+    ''', (new_status, admin_notes, report_id))
+    
+    # If action is approve, perform blacklisting
+    blacklist_msg = []
+    if action == 'approve':
+        user_id = session.get('user_id')
+        reason = f"Blacklisted via Citizen Report #{report_id} Approval"
+        if admin_notes:
+            reason += f": {admin_notes}"
+            
+        if blacklist_aadhaar and report['reported_aadhaar']:
+            # Check if already blacklisted to avoid duplicates
+            exists = conn.execute('''
+                SELECT id FROM blacklist_whitelist 
+                WHERE entity_type = 'aadhaar' AND entity_value = ? AND list_type = 'blacklist'
+            ''', (report['reported_aadhaar'],)).fetchone()
+            if not exists:
+                conn.execute('''
+                    INSERT INTO blacklist_whitelist 
+                    (entity_type, entity_value, list_type, reason, added_by, auto_added)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', ('aadhaar', report['reported_aadhaar'], 'blacklist', reason, user_id, 0))
+                blacklist_msg.append(f"Aadhaar {report['reported_aadhaar']}")
+                # Log audit
+                add_audit_log('LIST_UPDATE', 'aadhaar', 0, 
+                              None, {'list': 'blacklist', 'value': report['reported_aadhaar']})
+                
+        if blacklist_phone and report['reported_phone']:
+            exists = conn.execute('''
+                SELECT id FROM blacklist_whitelist 
+                WHERE entity_type = 'phone' AND entity_value = ? AND list_type = 'blacklist'
+            ''', (report['reported_phone'],)).fetchone()
+            if not exists:
+                conn.execute('''
+                    INSERT INTO blacklist_whitelist 
+                    (entity_type, entity_value, list_type, reason, added_by, auto_added)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', ('phone', report['reported_phone'], 'blacklist', reason, user_id, 0))
+                blacklist_msg.append(f"Phone {report['reported_phone']}")
+                # Log audit
+                add_audit_log('LIST_UPDATE', 'phone', 0, 
+                              None, {'list': 'blacklist', 'value': report['reported_phone']})
+    
     conn.commit()
     conn.close()
     
-    flash('Report marked as resolved successfully!', 'success')
+    # Add audit log for report resolution
+    add_audit_log('REPORT_ACTION', 'citizen_report', report_id, 
+                  {'status': report['report_status']}, {'status': new_status, 'notes': admin_notes})
+    
+    success_msg = f"Report marked as {new_status} successfully."
+    if blacklist_msg:
+        success_msg += f" Added to blacklist: {', '.join(blacklist_msg)}."
+    
+    flash(success_msg, 'success')
     return redirect(url_for('admin_reports'))
 
 # Feature 13: Audit Trail
@@ -791,35 +915,6 @@ def device_analysis(app_id):
                          devices=devices, 
                          device_stats=device_stats)
 
-# Feature 19: API Security
-@app.route('/api-security')
-@login_required
-def api_security():
-    """View API security metrics"""
-    conn = db.get_db_connection()
-    
-    # Get API access stats
-    api_stats = conn.execute('''
-        SELECT endpoint, COUNT(*) as request_count,
-               SUM(rate_limit_hit) as rate_limit_violations
-        FROM api_access_logs
-        WHERE created_at >= datetime('now', '-24 hours')
-        GROUP BY endpoint
-    ''').fetchall()
-    
-    # Get suspicious IPs
-    suspicious_ips = conn.execute('''
-        SELECT ip_address, COUNT(*) as request_count
-        FROM api_access_logs
-        WHERE created_at >= datetime('now', '-1 hour')
-        GROUP BY ip_address
-        HAVING request_count > 100
-    ''').fetchall()
-    
-    conn.close()
-    return render_template('api_security.html', 
-                         api_stats=api_stats,
-                         suspicious_ips=suspicious_ips)
 
 # Feature 20: Blacklist/Whitelist Management
 @app.route('/admin/blacklist')
@@ -870,6 +965,47 @@ def add_to_list():
     flash(f"Added to {list_type}", 'success')
     return redirect(url_for('manage_lists'))
 
+@app.route('/admin/manual-approve')
+@admin_required
+def manual_approve():
+    """Manual Approval dashboard for admin users"""
+    conn = db.get_db_connection()
+    applications = conn.execute('SELECT * FROM applications ORDER BY created_at DESC').fetchall()
+    conn.close()
+    return render_template('admin/manual_approve.html', applications=applications)
+
+@app.route('/admin/application/<int:app_id>/classify', methods=['POST'])
+@admin_required
+def classify_application(app_id):
+    """Manually approve or reject an application"""
+    new_classification = request.form.get('classification')
+    if new_classification not in ['APPROVE', 'REJECT', 'REVIEW']:
+        flash('Invalid classification', 'error')
+        return redirect(request.referrer or url_for('manual_approve'))
+    
+    conn = db.get_db_connection()
+    app_data = conn.execute('SELECT * FROM applications WHERE id = ?', (app_id,)).fetchone()
+    if not app_data:
+        conn.close()
+        flash('Application not found', 'error')
+        return redirect(request.referrer or url_for('manual_approve'))
+        
+    conn.execute('''
+        UPDATE applications 
+        SET classification = ? 
+        WHERE id = ?
+    ''', (new_classification, app_id))
+    conn.commit()
+    conn.close()
+    
+    # Audit log
+    add_audit_log('MANUAL_CLASSIFY', 'application', app_id, 
+                  {'classification': app_data['classification']}, 
+                  {'classification': new_classification})
+    
+    flash(f"Application #{app_id} status updated to {new_classification} successfully.", 'success')
+    return redirect(request.referrer or url_for('manual_approve'))
+
 # Feature 12: Enhanced Application Analysis with All Features
 @app.route('/advanced-analyze/<int:app_id>')
 @login_required
@@ -919,6 +1055,184 @@ def advanced_analyze(app_id):
                          explanation=explanation,
                          security_level=security_level)
 
+# ---------------------------------------------------------------------------
+# Admin: ML Model Metrics Page
+# ---------------------------------------------------------------------------
+@app.route('/admin/ml-metrics')
+@admin_required
+def ml_metrics():
+    """Display RandomForest model performance metrics."""
+    metrics = fraud_detector.get_ml_metrics()
+    user = db.get_user_by_id(session['user_id'])
+    return render_template('admin/ml_metrics.html', metrics=metrics, user=user)
+
+# ---------------------------------------------------------------------------
+# REST API v1
+# ---------------------------------------------------------------------------
+@app.route('/api/v1/stats', methods=['GET'])
+def api_stats():
+    """
+    Get dashboard statistics.
+    ---
+    tags:
+      - Statistics
+    responses:
+      200:
+        description: Aggregated fraud detection statistics
+    """
+    stats = db.get_statistics()
+    return jsonify({
+        'total': stats['total'],
+        'approved': stats['approved'],
+        'review': stats['review'],
+        'rejected': stats['rejected'],
+        'fraud_rate': round(stats['rejected'] / max(stats['total'], 1) * 100, 2)
+    })
+
+@app.route('/api/v1/applications', methods=['GET'])
+@login_required
+def api_list_applications():
+    """
+    List applications with pagination and filtering.
+    ---
+    tags:
+      - Applications
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        default: 1
+      - name: per_page
+        in: query
+        type: integer
+        default: 25
+      - name: classification
+        in: query
+        type: string
+        enum: [APPROVE, REVIEW, REJECT]
+      - name: search
+        in: query
+        type: string
+    responses:
+      200:
+        description: Paginated list of applications
+    """
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 25, type=int), 100)
+    classification = request.args.get('classification')
+    search = request.args.get('search')
+
+    apps, total, total_pages = db.get_paginated_applications(
+        page=page, per_page=per_page,
+        classification=classification, search=search
+    )
+    return jsonify({
+        'page': page, 'per_page': per_page,
+        'total': total, 'total_pages': total_pages,
+        'data': [
+            {
+                'id': a['id'], 'name': a['name'],
+                'scheme': a['scheme'], 'risk_score': a['risk_score'],
+                'classification': a['classification'],
+                'created_at': a['created_at']
+            } for a in apps
+        ]
+    })
+
+@app.route('/api/v1/applications/<int:app_id>', methods=['GET'])
+@login_required
+def api_get_application(app_id):
+    """
+    Get a single application by ID.
+    ---
+    tags:
+      - Applications
+    parameters:
+      - name: app_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Application details
+      404:
+        description: Not found
+    """
+    app_row = db.get_application_by_id(app_id)
+    if not app_row:
+        return jsonify({'error': 'Application not found'}), 404
+    a = dict(app_row)
+    a['reasons'] = json.loads(a['reasons']) if a['reasons'] else []
+    return jsonify(a)
+
+@app.route('/api/v1/classify', methods=['POST'])
+def api_classify():
+    """
+    Score an application without saving it (demo/test endpoint).
+    ---
+    tags:
+      - Classification
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, aadhaar, phone, income, address]
+          properties:
+            name: {type: string, example: Ravi Kumar}
+            aadhaar: {type: string, example: '123456789012'}
+            phone: {type: string, example: '9876543210'}
+            income: {type: number, example: 180000}
+            address: {type: string, example: '12 MG Road, Bangalore'}
+            scheme: {type: string, example: PM-KISAN}
+            age: {type: integer, example: 45}
+            gender: {type: string, example: Male}
+            district: {type: string, example: Bangalore Rural}
+    responses:
+      200:
+        description: Fraud classification result
+      400:
+        description: Missing required fields
+    """
+    data = request.get_json(force=True) or {}
+    required = ['name', 'aadhaar', 'phone', 'income', 'address']
+    missing = [f for f in required if not data.get(f)]
+    if missing:
+        return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
+
+    try:
+        income = float(data['income'])
+        age = int(data['age']) if data.get('age') else None
+    except (ValueError, TypeError):
+        return jsonify({'error': 'income must be numeric, age must be integer'}), 400
+
+    result = fraud_detector.detect_fraud(
+        name=data['name'], aadhaar=data['aadhaar'],
+        phone=data['phone'], income=income,
+        address=data['address'],
+        scheme=data.get('scheme'), age=age,
+        gender=data.get('gender'), district=data.get('district')
+    )
+    return jsonify(result)
+
+@app.route('/api/v1/ml-metrics', methods=['GET'])
+@admin_required
+def api_ml_metrics():
+    """
+    Get ML model performance metrics.
+    ---
+    tags:
+      - ML Model
+    responses:
+      200:
+        description: RandomForest model accuracy, precision, recall, F1, and feature importances
+    """
+    return jsonify(fraud_detector.get_ml_metrics())
+
+# ---------------------------------------------------------------------------
+# Existing API endpoints
+# ---------------------------------------------------------------------------
 # API endpoint for bot detection (Feature 10)
 @app.route('/api/bot-check', methods=['POST'])
 def api_bot_check():
@@ -932,7 +1246,7 @@ def api_bot_check():
 def track_behavior():
     """Track user behavior for bot detection"""
     data = request.get_json()
-    
+
     conn = db.get_db_connection()
     conn.execute('''
         INSERT INTO behavior_patterns 
@@ -944,7 +1258,7 @@ def track_behavior():
           data.get('bot_probability', 0)))
     conn.commit()
     conn.close()
-    
+
     return jsonify({'status': 'tracked'})
 
 if __name__ == '__main__':

@@ -1,0 +1,28 @@
+﻿version: "3.9"
+
+services:
+  fraudshield-app:
+    build: .
+    container_name: fraudshield
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=change_this_to_a_strong_random_key_in_production
+    volumes:
+      # Persist SQLite database across container restarts
+      - fraudshield_db:/app/fraud_detection.db
+      - fraudshield_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  fraudshield_db:
+    driver: local
+  fraudshield_logs:
+    driver: local

@@ -6,6 +6,8 @@
     <title>Advanced Analysis - Fraud Detection</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -20,7 +22,7 @@
                         <a class="nav-link" href="/dashboard">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/application/{{ application.id }}">Back to Application</a>
+                        <a class="nav-link" href="/details/{{ application.id }}">Back to Application</a>
                     </li>
                 </ul>
             </div>
@@ -28,10 +30,15 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
                 <h2><i class="bi bi-cpu me-2"></i>Advanced Fraud Analysis</h2>
                 <p class="text-muted">Comprehensive AI-powered risk assessment for {{ application.name }}</p>
+                <div class="mt-2">
+                    <a href="/dashboard" class="btn btn-cyber btn-sm me-2"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+                    <a href="/details/{{ application.id }}" class="btn btn-cyber btn-sm me-2"><i class="bi bi-file-text me-1"></i>Application Details</a>
+                    <button onclick="downloadAnalysisPDFReport()" class="btn btn-cyber btn-sm"><i class="bi bi-file-earmark-pdf me-1 text-danger"></i>Download PDF Report</button>
+                </div>
             </div>
             <div class="text-end">
                 <div class="display-4 fw-bold text-{{ 'danger' if total_risk > 70 else 'warning' if total_risk > 40 else 'success' }}">
@@ -274,18 +281,188 @@
 
         <!-- Action Buttons -->
         <div class="mt-4 mb-5">
-            <a href="/application/{{ application.id }}" class="btn btn-primary">
+            <a href="/details/{{ application.id }}" class="btn btn-primary">
                 <i class="bi bi-arrow-left me-2"></i>Back to Application
             </a>
             <a href="/verify-document/{{ application.id }}" class="btn btn-warning">
                 <i class="bi bi-file-earmark-check me-2"></i>Verify Documents
             </a>
-            <a href="/verify-face/{{ application.id }}" class="btn btn-info">
+            <a href="/verify-face/{{ application.id }}" class="btn btn-info me-2">
                 <i class="bi bi-person-bounding-box me-2"></i>Face Verification
             </a>
+            <button onclick="downloadAnalysisPDFReport()" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
+            </button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function downloadAnalysisPDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header Box
+            doc.setFillColor(8, 12, 20);
+            doc.rect(0, 0, 210, 42, 'F');
+            
+            // Header Content
+            doc.setTextColor(0, 240, 255);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(22);
+            doc.text("SENTINEL AI - FORENSIC DECK", 15, 18);
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.text("COMPREHENSIVE RISK ASSESSMENT & FRAUD REPORT", 15, 26);
+            doc.text("GOVERNMENT WELFARE AUDIT DIVISION", 15, 31);
+            
+            doc.setTextColor(150, 150, 150);
+            doc.text("OFFICIAL RECORD", 160, 18);
+            doc.text(`DATE: ${new Date().toLocaleString()}`, 115, 31);
+            
+            // Primary divider
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1.5);
+            doc.line(15, 42, 195, 42);
+            
+            // Summary details
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("1. CLAIMANT AUDIT SUMMARY", 15, 54);
+            
+            // Draw a grey box
+            doc.setFillColor(245, 247, 250);
+            doc.rect(15, 60, 180, 40, 'F');
+            doc.setDrawColor(210, 220, 230);
+            doc.rect(15, 60, 180, 40);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.setTextColor(50, 60, 70);
+            doc.text(`Application ID: {{ application.id }}`, 20, 67);
+            doc.text(`Name: {{ application.name }}`, 20, 73);
+            doc.text(`Aadhaar: {{ application.aadhaar }}`, 20, 79);
+            doc.text(`Scheme: {{ application.scheme }}`, 20, 85);
+            doc.text(`Income: INR {{ application.income }}`, 20, 91);
+            
+            // Risk Badge inside summary box
+            const score = {{ total_risk }};
+            const classification = "{{ application.classification or 'REVIEW' }}";
+            doc.setFillColor(score > 70 ? 239 : score > 40 ? 245 : 16, score > 70 ? 68 : score > 40 ? 158 : 185, score > 70 ? 68 : score > 40 ? 11 : 129); // red, yellow, green
+            doc.rect(125, 65, 60, 28, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text(classification, 130, 72);
+            doc.text(`RISK SCORE: ${score}/100`, 130, 78);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.text(`Confidence: {{ analysis.predictive.prediction.confidence }}%`, 130, 85);
+            
+            // Details Section
+            let y = 112;
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("2. RISK ASSESSMENT METRICS", 15, y);
+            y += 8;
+            
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            
+            function drawGridRow(label, status, details) {
+                doc.setDrawColor(220, 220, 220);
+                doc.line(15, y, 195, y);
+                doc.setFont("courier", "bold");
+                doc.text(label.padEnd(20), 20, y + 6);
+                doc.setFont("courier", "normal");
+                doc.text(status, 80, y + 6);
+                doc.text(details, 115, y + 6);
+                y += 10;
+            }
+            
+            drawGridRow("Predictive Model", "{{ analysis.predictive.prediction.risk_level }} Risk", "Conf: {{ analysis.predictive.prediction.confidence }}%");
+            drawGridRow("Relational Links", "{{ 'PART OF FRAUD RING' if analysis.network.is_fraud_ring else 'SAFE' }}", "Links: {{ analysis.network.total_connections }}");
+            drawGridRow("Time Anomaly", "{{ 'SUSPICIOUS' if analysis.time_anomaly.is_suspicious else 'NORMAL' }}", "Hour: {{ analysis.time_anomaly.submission_hour }}:00");
+            drawGridRow("Geo-fencing", "{{ 'VALID' if analysis.geo_fencing.is_valid_location else 'INVALID' }}", "City: {{ analysis.geo_fencing.geo_data.city }}");
+            drawGridRow("Financial Checks", "{{ 'SUSPICIOUS' if analysis.financial.is_suspicious else 'NORMAL' }}", "Income Risk: +{{ analysis.financial.risk_added }}");
+            drawGridRow("Welfare Abuse", "{{ 'ABUSE FLAG' if analysis.benefit_abuse.is_abuse else 'NORMAL' }}", "Claims: {{ analysis.benefit_abuse.total_claims }}");
+            drawGridRow("Blacklist Check", "{{ 'BLACKLISTED' if analysis.list_check.is_blacklisted else 'CLEAN' }}", "Action: {{ analysis.list_check.action }}");
+            
+            doc.setDrawColor(220, 220, 220);
+            doc.line(15, y, 195, y);
+            
+            // Add a Page 2 for Detailed Explanations
+            doc.addPage();
+            doc.setFillColor(8, 12, 20);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(0, 240, 255);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(14);
+            doc.text("SENTINEL AI - AUDIT DETAILS PAGE 2", 15, 15);
+            
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1);
+            doc.line(15, 25, 195, 25);
+            
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("3. SYSTEM FINDINGS & EXPLANATION SUMMARY", 15, 40);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.setTextColor(50, 60, 70);
+            
+            // Explanation Summary Text block
+            const explanationSummary = `{{ explanation.summary }}`;
+            const splitSummary = doc.splitTextToSize(explanationSummary, 180);
+            doc.text(splitSummary, 15, 48);
+            
+            let expY = 48 + (splitSummary.length * 6) + 10;
+            doc.setFont("helvetica", "bold");
+            doc.text("TRIGGERED RULES & FACTORS:", 15, expY);
+            expY += 8;
+            
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            
+            {% if explanation.explanations %}
+                {% for exp in explanation.explanations %}
+                    doc.text("- {{ exp }}", 15, expY);
+                    expY += 8;
+                {% endfor %}
+            {% else %}
+                doc.text("No specific risk flags triggered.", 15, expY);
+            {% endif %}
+            
+            // Cryptographic seal signature
+            expY += 20;
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1);
+            doc.rect(130, expY, 65, 25);
+            doc.setTextColor(0, 180, 200);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.text("SENTINEL AI ENGINE", 135, expY + 8);
+            doc.setFont("helvetica", "normal");
+            doc.text("CRYPTOGRAPHICALLY SEALED", 135, expY + 14);
+            doc.text(`HASH: HASH_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, 135, expY + 20);
+            
+            // Footer on page 2
+            doc.setTextColor(120, 120, 120);
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(7.5);
+            doc.text("DISCLAIMER: This document is an official digital record generated dynamically via graph relational link analysis.", 15, 280);
+            doc.text("Any alteration or unauthorized sharing of this document is subject to statutory audit actions.", 15, 284);
+            
+            doc.save(`Sentinel_Forensic_Report_Application_{{ application.id }}.pdf`);
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,126 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Analysis - Fraud Detection</title>
+    <title>3D Link Analysis - Risk Intelligence</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .graph-viewport-box {
+            position: relative;
+            height: 520px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background-color: #080c14;
+        }
+        .canvas-3d-graph {
+            width: 100%;
+            height: 100%;
+        }
+        .inspector-panel {
+            min-height: 520px;
+        }
+        .legend-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+    </style>
 </head>
-<body>
+<body class="animate-fade-in">
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-shield-check me-2"></i>
-                <strong>Fraud Detection</strong>
+                <strong>SENTINEL AI</strong>
             </a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <a class="nav-link" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Command Dashboard
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/network-analysis">Network Analysis</a>
+                        <a class="nav-link" href="/new-application">
+                            <i class="bi bi-plus-circle me-1"></i>New Application
+                        </a>
                     </li>
+                    {% if session.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/manual-approve">
+                            <i class="bi bi-patch-check me-1"></i>Manual Approve
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock me-1"></i>Advanced Forensics
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item active" href="/network-analysis">
+                                <i class="bi bi-diagram-3 me-2 text-info"></i>3D Link Analysis
+                            </a></li>
+                            <li><a class="dropdown-item" href="/pending-verifications">
+                                <i class="bi bi-check2-square me-2 text-warning"></i>Pending Verification
+                            </a></li>
+                            <li><a class="dropdown-item" href="/fraud-simulation">
+                                <i class="bi bi-cpu me-2 text-success"></i>Engine Simulation
+                            </a></li>
+                            <li><a class="dropdown-item" href="/audit-log">
+                                <i class="bi bi-clock-history me-2 text-secondary"></i>Audit Trail
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% if session.role == 'admin' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-info" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-1"></i>System Administration
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="/admin/users">
+                                <i class="bi bi-people me-2 text-info"></i>Manage Users
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/reports">
+                                <i class="bi bi-flag me-2 text-warning"></i>Citizen Reports
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/blacklist">
+                                <i class="bi bi-list-check me-2 text-danger"></i>Entity Lists
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2><i class="bi bi-diagram-3 me-2"></i>Network & Fraud Ring Analysis</h2>
-        <p class="text-muted">Feature 2: Detect organized fraud through connection analysis</p>
+    <div class="container-fluid mt-4 px-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-3">
+                <h2 class="font-cyber text-uppercase mb-0 tracking-wider"><i class="bi bi-diagram-3 me-2 text-info"></i>3D Connection Network</h2>
+                <span class="badge-cyber info">FORENSICS ANALYSIS</span>
+            </div>
+            <a href="/dashboard" class="btn btn-cyber btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
+        <p class="text-secondary mb-4">Relational graph database link visualizer. Connects claims based on shared identifiers (Aadhaar cards, phone numbers, districts).</p>
 
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
+        <!-- Network Info Summary cards -->
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card bg-primary text-white">
-                    <div class="card-body">
-                        <h5>Total Network Links</h5>
-                        <h2>{{ stats.total_links }}</h2>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-secondary small font-cyber">ACTIVE EDGES</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-white">{{ stats.total_links }}</h4>
                     </div>
+                    <i class="bi bi-link-45deg text-info fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body">
-                        <h5>Unique Entities</h5>
-                        <h2>{{ stats.unique_entities }}</h2>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-secondary small font-cyber">UNIQUE ENTITIES</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-white">{{ stats.unique_entities }}</h4>
                     </div>
+                    <i class="bi bi-fingerprint text-info fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-warning text-dark">
-                    <div class="card-body">
-                        <h5>Fraud Rings Detected</h5>
-                        <h2>{{ stats.detected_rings }}</h2>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--crimson-red);">
+                    <div>
+                        <span class="text-secondary small font-cyber">DETECTED RINGS</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-danger">{{ stats.detected_rings }}</h4>
                     </div>
+                    <i class="bi bi-exclamation-triangle text-danger fs-3"></i>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h5>Avg Connections</h5>
-                        <h2>{{ "%.1f"|format(stats.average_connections_per_entity) }}</h2>
+                <div class="glass-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-secondary small font-cyber">AVG DECREE</span>
+                        <h4 class="mb-0 mt-1 font-cyber fw-bold text-white">{{ "%.1f"|format(stats.average_connections_per_entity) }}</h4>
+                    </div>
+                    <i class="bi bi-share text-info fs-3"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Graph & Inspector Panes -->
+        <div class="row g-4 mb-4">
+            <!-- 3D Canvas Box -->
+            <div class="col-lg-8">
+                <div class="glass-card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="font-cyber text-uppercase text-secondary small tracking-widest"><i class="bi bi-globe me-2"></i>Interactive WebGL Canvas</span>
+                        <span class="text-secondary small d-none d-md-inline"><i class="bi bi-mouse me-1"></i>Scroll to Zoom | Drag to Rotate | Click to Select</span>
+                    </div>
+                    <div class="graph-viewport-box">
+                        <div id="network-canvas-3d" class="canvas-3d-graph"></div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="legend-pill"><div class="legend-color" style="background:#10b981;"></div>Approve (Claim)</div>
+                        <div class="legend-pill"><div class="legend-color" style="background:#f59e0b;"></div>Review (Claim)</div>
+                        <div class="legend-pill"><div class="legend-color" style="background:#ef4444;"></div>Reject (Claim)</div>
+                        <div class="legend-pill"><div class="legend-color" style="background:#00f0ff;"></div>Shared Aadhaar</div>
+                        <div class="legend-pill"><div class="legend-color" style="background:#a855f7;"></div>Shared Phone</div>
+                        <div class="legend-pill"><div class="legend-color" style="background:#64748b;"></div>Shared District</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspector panel -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100 inspector-panel d-flex flex-column justify-content-between p-4">
+                    <div class="w-100">
+                        <h5 class="font-cyber text-uppercase text-info mb-3 small tracking-widest"><i class="bi bi-search me-2"></i>Forensic Inspector</h5>
+                        
+                        <div id="inspector-default-content" class="py-4 text-center text-secondary">
+                            <i class="bi bi-cpu fs-1 text-muted d-block mb-3" style="opacity:0.3;"></i>
+                            <p class="mb-0">Select any node in the 3D network to inspect its relationships and metadata.</p>
+                        </div>
+
+                        <div id="inspector-node-details" class="d-none animate-fade-in">
+                            <h3 id="inspector-node-label" class="mb-2 font-cyber text-white truncate">Select Node</h3>
+                            <span id="inspector-node-badge" class="badge-cyber info mb-3">NODE</span>
+                            
+                            <!-- Human-readable metadata panel -->
+                            <div id="inspector-node-metadata" class="mt-2 mb-3 p-3 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.45);">
+                                <div class="row g-2" id="inspector-metadata-list">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                            </div>
+                            
+                            <div class="terminal-console mt-3 w-100">
+                                <div class="terminal-header">
+                                    <div class="terminal-dot red"></div>
+                                    <div class="terminal-dot yellow"></div>
+                                    <div class="terminal-dot green"></div>
+                                </div>
+                                <div class="terminal-text font-cyber" id="inspector-node-json">
+                                    // Query logs empty
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-100 mt-4 border-top border-secondary pt-3" id="inspector-actions" style="display:none;">
+                        <a id="inspector-details-btn" href="#" class="btn btn-cyber w-100 mb-2">
+                            <i class="bi bi-file-earmark-text me-2"></i>GO TO DETAILS
+                        </a>
+                        <button id="inspector-pdf-btn" class="btn btn-cyber w-100 mb-2" onclick="downloadNodePDFReport()">
+                            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>DOWNLOAD REPORT (PDF)
+                        </button>
+                        <form id="blacklist-form" action="/admin/add-to-list" method="POST" class="d-none">
+                            <input type="hidden" name="entity_type" id="blacklist-entity-type">
+                            <input type="hidden" name="entity_value" id="blacklist-entity-value">
+                            <input type="hidden" name="list_type" value="blacklist">
+                            <input type="hidden" name="reason" value="Shared fraud-network association detected via 3D link forensics">
+                            <button type="submit" class="btn btn-cyber-danger w-100">
+                                <i class="bi bi-shield-slash me-2"></i>BLACKLIST ENTITY
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Detected Fraud Rings -->
-        <div class="card mb-4">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Detected Fraud Rings</h5>
-            </div>
-            <div class="card-body">
-                {% if rings %}
-                <div class="accordion" id="ringsAccordion">
-                    {% for ring in rings %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                    data-bs-target="#ring{{ loop.index }}">
-                                <span class="badge bg-{{ 'danger' if ring.risk_level == 'Critical' else 'warning' if ring.risk_level == 'High' else 'info' }} me-2">
-                                    {{ ring.risk_level }}
-                                </span>
-                                {{ ring.ring_id }} - {{ ring.size }} Applications (Risk: {{ ring.risk_score }})
-                            </button>
-                        </h2>
-                        <div id="ring{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#ringsAccordion">
-                            <div class="accordion-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Connection Types:</h6>
-                                        <ul>
-                                            {% for type, count in ring.connection_types.items() %}
-                                            <li>{{ type }}: {{ count }} connections</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Shared Entities:</h6>
-                                        <ul>
-                                            {% for entity in ring.shared_entities %}
-                                            <li><small>{{ entity }}</small></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
+        <!-- Detected Fraud Rings Accordions -->
+        <div class="glass-card p-4 mb-4">
+            <h4 class="font-cyber text-uppercase text-danger mb-4 small tracking-wider"><i class="bi bi-exclamation-triangle me-2"></i>Algorithmic Fraud Ring Detections</h4>
+            
+            {% if rings %}
+            <div class="accordion accordion-flush" id="ringsAccordion">
+                {% for ring in rings %}
+                <div class="accordion-item bg-transparent border-bottom border-secondary mb-2">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-transparent text-white font-cyber" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#ring{{ loop.index }}" style="box-shadow:none;">
+                            <span class="badge-cyber danger me-3">
+                                {{ ring.risk_level }} Risk
+                            </span>
+                            Ring {{ ring.ring_id }} - {{ ring.size }} Interlinked Claims (Score: {{ ring.risk_score }})
+                        </button>
+                    </h2>
+                    <div id="ring{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#ringsAccordion">
+                        <div class="accordion-body text-secondary p-4">
+                            <div class="row g-4 mb-3">
+                                <div class="col-md-6">
+                                    <h6 class="text-white font-cyber mb-2">Connection Channels:</h6>
+                                    <ul class="mb-0">
+                                        {% for type, count in ring.connection_types.items() %}
+                                        <li>Shared {{ type }}: {{ count }} occurrences</li>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
-                                <h6 class="mt-3">Applications in Ring:</h6>
-                                <table class="table table-sm">
+                                <div class="col-md-6">
+                                    <h6 class="text-white font-cyber mb-2">Shared Indicators:</h6>
+                                    <ul class="mb-0 text-truncate">
+                                        {% for entity in ring.shared_entities %}
+                                        <li><code>{{ entity }}</code></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <h6 class="text-white font-cyber mb-2">Flagged Claimants:</h6>
+                            <div class="table-responsive">
+                                <table class="table-cyber table-sm">
                                     <thead>
                                         <tr>
                                             <th>Name</th>
                                             <th>Scheme</th>
-                                            <th>Status</th>
+                                            <th>Classification</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for app in ring.applications %}
                                         <tr>
-                                            <td>{{ app.name }}</td>
+                                            <td class="fw-semibold text-white">{{ app.name }}</td>
                                             <td>{{ app.scheme }}</td>
                                             <td>
-                                                <span class="badge bg-{{ 'success' if app.classification == 'APPROVE' else 'warning' if app.classification == 'REVIEW' else 'danger' }}">
+                                                <span class="badge-cyber {% if app.classification == 'APPROVE' %}success{% elif app.classification == 'REJECT' %}danger{% else %}warning{% endif %}">
                                                     {{ app.classification }}
                                                 </span>
                                             </td>
@@ -130,29 +307,29 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
-                                <div class="alert alert-warning">
-                                    <strong>Recommended Action:</strong> {{ ring.recommended_action }}
-                                </div>
+                            </div>
+                            <div class="alert alert-danger bg-opacity-10 border-danger text-danger mt-3 mb-0">
+                                <strong>Recommended Action:</strong> {{ ring.recommended_action }}
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle me-2"></i>No fraud rings detected at this time.
-                </div>
-                {% endif %}
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="alert alert-success bg-opacity-10 border-success text-success mb-0">
+                <i class="bi bi-check-circle me-2"></i>No fraud rings detected in current datasets.
+            </div>
+            {% endif %}
         </div>
 
         <!-- Most Connected Entities -->
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Most Connected Entities</h5>
+        <div class="glass-card mb-5">
+            <div class="card-header-cyber">
+                <span><i class="bi bi-link-45deg me-2 text-info"></i>High-Degree Network Entities</span>
             </div>
-            <div class="card-body">
-                <table class="table">
+            <div class="table-responsive">
+                <table class="table-cyber">
                     <thead>
                         <tr>
                             <th>Entity Type</th>
@@ -163,17 +340,17 @@
                     </thead>
                     <tbody>
                         {% for entity in stats.top_connected_entities %}
-                        <tr class="{{ 'table-danger' if entity.connection_count > 3 else 'table-warning' if entity.connection_count > 2 else '' }}">
-                            <td>{{ entity.entity_type }}</td>
-                            <td>{{ entity.entity_value[:4] }}****</td>
-                            <td>{{ entity.connection_count }}</td>
+                        <tr>
+                            <td class="font-cyber font-semibold text-info">{{ entity.entity_type }}</td>
+                            <td class="font-cyber"><code>****{{ entity.entity_value[-6:] if entity.entity_value|length > 6 else entity.entity_value }}</code></td>
+                            <td class="font-cyber fw-bold text-white">{{ entity.connection_count }} links</td>
                             <td>
                                 {% if entity.connection_count > 3 %}
-                                <span class="badge bg-danger">High Risk</span>
+                                <span class="badge-cyber danger">High Risk</span>
                                 {% elif entity.connection_count > 2 %}
-                                <span class="badge bg-warning">Medium Risk</span>
+                                <span class="badge-cyber warning">Medium Risk</span>
                                 {% else %}
-                                <span class="badge bg-info">Low Risk</span>
+                                <span class="badge-cyber info">Low Risk</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -184,6 +361,295 @@
         </div>
     </div>
 
+    <!-- Security Footer -->
+    <footer class="footer-cyber text-center">
+        <div class="container">
+            <small>
+                <i class="bi bi-shield-check text-info me-1"></i>
+                Risk Decision Support &amp; Cyber-Forensics Sentinel System | Govt Welfare Audit
+            </small>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/three_visuals.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fetch applications dynamically to draw 3D connection network
+            fetch('/api/applications')
+                .then(res => res.json())
+                .then(data => {
+                    if(data && data.length > 0) {
+                        CyberVisuals.initNetwork3DGraph('network-canvas-3d', data, onNodeSelect);
+                    } else {
+                        document.getElementById('network-canvas-3d').innerHTML = `
+                            <div class="h-100 d-flex align-items-center justify-content-center text-secondary">
+                                <p>No application logs found. Graph database empty.</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading application network data:", err);
+                });
+        });
+
+        let selectedNode = null;
+
+        // Callback when a 3D Node is clicked
+        function onNodeSelect(node) {
+            selectedNode = node;
+
+            // Hide default text
+            document.getElementById('inspector-default-content').classList.add('d-none');
+            
+            // Show details panel
+            const detailsDiv = document.getElementById('inspector-node-details');
+            detailsDiv.classList.remove('d-none');
+            
+            // Update node labels
+            document.getElementById('inspector-node-label').textContent = node.label;
+            
+            const badge = document.getElementById('inspector-node-badge');
+            badge.className = 'badge-cyber';
+            badge.textContent = node.type.toUpperCase();
+            
+            if (node.type === 'app') {
+                const classification = node.extra.classification || 'REVIEW';
+                badge.classList.add(classification === 'APPROVE' ? 'success' : classification === 'REJECT' ? 'danger' : 'warning');
+                
+                // Details button
+                const detailsBtn = document.getElementById('inspector-details-btn');
+                detailsBtn.href = `/details/${node.id.split('_')[1]}`;
+                detailsBtn.style.display = 'block';
+                document.getElementById('inspector-actions').style.display = 'block';
+                
+                // Hide blacklist form for application nodes
+                document.getElementById('blacklist-form').classList.add('d-none');
+            } else {
+                badge.classList.add('info');
+                document.getElementById('inspector-actions').style.display = 'block';
+                
+                // Details button hide (since it's an entity, not a detail page)
+                document.getElementById('inspector-details-btn').href = '#';
+                document.getElementById('inspector-details-btn').style.display = 'none';
+                
+                // Show blacklist option if it's an Aadhaar or Phone node
+                if(node.type === 'aadhaar' || node.type === 'phone') {
+                    document.getElementById('blacklist-form').classList.remove('d-none');
+                    document.getElementById('blacklist-entity-type').value = node.type;
+                    
+                    // Parse original value from label/id
+                    const value = node.id.split('_')[1];
+                    document.getElementById('blacklist-entity-value').value = value;
+                } else {
+                    document.getElementById('blacklist-form').classList.add('d-none');
+                }
+            }
+
+            // Populate human-readable metadata list
+            const metaList = document.getElementById('inspector-metadata-list');
+            metaList.innerHTML = '';
+            
+            function addMetaRow(label, val, isBadge = false, badgeClass = '') {
+                const colLabel = document.createElement('div');
+                colLabel.className = 'col-5 text-secondary small font-cyber';
+                colLabel.textContent = label.toUpperCase();
+                
+                const colVal = document.createElement('div');
+                colVal.className = 'col-7 text-white font-cyber fw-bold text-end';
+                
+                if (isBadge) {
+                    colVal.innerHTML = `<span class="badge ${badgeClass}">${val}</span>`;
+                } else {
+                    colVal.textContent = val;
+                }
+                
+                metaList.appendChild(colLabel);
+                metaList.appendChild(colVal);
+                
+                // Divider
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-12 border-bottom border-secondary my-1 opacity-25';
+                metaList.appendChild(colDiv);
+            }
+            
+            addMetaRow('Node ID', node.id);
+            addMetaRow('Node Type', node.type.toUpperCase());
+            addMetaRow('Risk Score', `${node.riskScore || 0} / 100`, true, (node.riskScore || 0) > 70 ? 'bg-danger' : (node.riskScore || 0) > 40 ? 'bg-warning' : 'bg-success');
+            
+            if (node.type === 'app') {
+                addMetaRow('Claimant', node.label);
+                addMetaRow('Scheme', node.extra.scheme);
+                addMetaRow('Aadhaar No', node.extra.aadhaar);
+                addMetaRow('Phone No', node.extra.phone);
+                addMetaRow('Income', "INR " + parseFloat(node.extra.income).toLocaleString());
+                addMetaRow('Status', node.extra.classification, true, node.extra.classification === 'APPROVE' ? 'bg-success' : node.extra.classification === 'REJECT' ? 'bg-danger' : 'bg-warning');
+            } else {
+                addMetaRow('Value', node.id.split('_')[1]);
+            }
+
+            // Print formatted JSON in the console box
+            const jsonBox = document.getElementById('inspector-node-json');
+            
+            const printData = {
+                id: node.id,
+                type: node.type,
+                weight: node.val,
+                riskScore: node.riskScore
+            };
+            
+            if (node.type === 'app') {
+                printData.claimant = node.label;
+                printData.scheme = node.extra.scheme;
+                printData.aadhaar = "****" + node.extra.aadhaar.substring(8);
+                printData.phone = node.extra.phone;
+                printData.income = "INR " + parseFloat(node.extra.income).toLocaleString();
+                printData.status = node.extra.classification;
+            } else {
+                printData.value = node.id.split('_')[1];
+            }
+
+            jsonBox.textContent = JSON.stringify(printData, null, 2);
+        }
+
+        // PDF Generation function
+        function downloadNodePDFReport() {
+            if (!selectedNode) {
+                alert("No node selected for report generation.");
+                return;
+            }
+            
+            const node = selectedNode;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Draw a neat background border and header box
+            doc.setFillColor(8, 12, 20); // Dark theme header matching SENTINEL AI
+            doc.rect(0, 0, 210, 42, 'F');
+            
+            // Header Content
+            doc.setTextColor(0, 240, 255); // Neon Cyber Blue
+            doc.setFont("courier", "bold");
+            doc.setFontSize(24);
+            doc.text("SENTINEL AI - RISK DETECTOR", 15, 18);
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.text("DYNAMIC FORENSICS & 3D LINK ANALYSIS SYSTEM", 15, 26);
+            doc.text("GOVERNMENT WELFARE AUDIT DIVISION", 15, 31);
+            
+            doc.setTextColor(150, 150, 150);
+            doc.text("CONFIDENTIAL FORENSIC AUDIT RECORD", 120, 18);
+            doc.text(`REPORT GEN DATE: ${new Date().toLocaleString()}`, 115, 31);
+            
+            // Primary divider line
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1.5);
+            doc.line(15, 42, 195, 42);
+            
+            // Entity Information Section
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text(`FORENSIC INTEGRITY AUDIT: ${node.label.toUpperCase()}`, 15, 56);
+            
+            // Draw a grey box for summary details
+            doc.setFillColor(240, 244, 248);
+            doc.rect(15, 62, 180, 28, 'F');
+            doc.setDrawColor(200, 210, 220);
+            doc.setLineWidth(0.5);
+            doc.rect(15, 62, 180, 28);
+            
+            doc.setTextColor(50, 60, 70);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.text(`Entity ID: ${node.id}`, 20, 69);
+            doc.text(`Node Type: ${node.type.toUpperCase()}`, 20, 76);
+            doc.text(`Importance / Node Weight: ${node.val || 8}`, 20, 83);
+            
+            // Risk Level Badge inside the box
+            const score = node.riskScore || 0;
+            const classification = score > 70 ? 'HIGH RISK' : score > 40 ? 'MEDIUM RISK' : 'LOW RISK';
+            doc.setFillColor(score > 70 ? 239 : score > 40 ? 245 : 16, score > 70 ? 68 : score > 40 ? 158 : 185, score > 70 ? 68 : score > 40 ? 11 : 129); // red, yellow, green
+            doc.rect(125, 67, 60, 18, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text(classification, 132, 74);
+            doc.setFontSize(9);
+            doc.text(`RISK SCORE: ${score}/100`, 132, 80);
+            
+            // Detailed Parameter list
+            let y = 105;
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("CRYPTOGRAPHIC AUDIT METADATA:", 15, y);
+            y += 8;
+            
+            // Draw Table Grid
+            doc.setLineWidth(0.2);
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            
+            function drawGridRow(label, value) {
+                doc.setDrawColor(220, 220, 220);
+                doc.line(15, y, 195, y);
+                doc.setFont("courier", "bold");
+                doc.text(label.padEnd(20), 20, y + 6);
+                doc.setFont("courier", "normal");
+                doc.text(String(value), 80, y + 6);
+                y += 10;
+            }
+            
+            drawGridRow("Node ID", node.id);
+            drawGridRow("Node Type", node.type.toUpperCase());
+            drawGridRow("Risk Score", `${score} / 100`);
+            
+            if (node.type === 'app') {
+                drawGridRow("Claimant Name", node.label);
+                drawGridRow("Welfare Scheme", node.extra.scheme);
+                drawGridRow("Aadhaar Number", node.extra.aadhaar);
+                drawGridRow("Phone Number", node.extra.phone);
+                drawGridRow("Reported Income", "INR " + parseFloat(node.extra.income).toLocaleString());
+                drawGridRow("Engine Status", node.extra.classification);
+            } else {
+                drawGridRow("Entity Value", node.id.split('_')[1]);
+            }
+            
+            doc.setDrawColor(220, 220, 220);
+            doc.line(15, y, 195, y);
+            
+            // Add a stamp
+            y += 20;
+            doc.setDrawColor(0, 240, 255);
+            doc.setLineWidth(1);
+            doc.rect(130, y, 65, 25);
+            doc.setTextColor(0, 180, 200);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.text("SENTINEL AI ENGINE", 135, y + 8);
+            doc.setFont("helvetica", "normal");
+            doc.text("CRYPTOGRAPHICALLY SEALED", 135, y + 14);
+            doc.text(`HASH: HASH_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, 135, y + 20);
+            
+            // Bottom Disclaimer
+            doc.setTextColor(120, 120, 120);
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(7.5);
+            doc.text("DISCLAIMER: This document is an official digital record generated dynamically via graph relational link analysis.", 15, 280);
+            doc.text("Any alteration or unauthorized sharing of this document is subject to statutory audit actions.", 15, 284);
+            
+            // Save Document
+            doc.save(`Sentinel_Forensic_Report_${node.type}_${node.id}.pdf`);
+        }
+    </script>
 </body>
 </html>

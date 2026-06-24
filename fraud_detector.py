@@ -1,5 +1,7 @@
 import numpy as np
-from sklearn.ensemble import IsolationForest
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.model_selection import train_test_split
 import database as db
 import re
 from datetime import datetime, timedelta
@@ -488,15 +490,32 @@ fraud_detector = AdvancedFraudDetector()
 import random
 
 class FraudDetector:
+    # Feature names for explainability
+    FEATURE_NAMES = [
+        'Income', 'Duplicate Aadhaar', 'Address Similarity',
+        'Phone Reuse Count', 'Suspicious Name', 'Poor Address Quality', 'Age Risk'
+    ]
+
     def __init__(self):
         self.model = IsolationForest(
             contamination=0.05,
             random_state=42,
             n_estimators=100
         )
+        # Supervised RandomForest classifier (primary ML model)
+        self.rf_model = RandomForestClassifier(
+            n_estimators=200,
+            max_depth=8,
+            min_samples_split=5,
+            random_state=42,
+            class_weight='balanced'
+        )
         self.is_trained = False
+        self.rf_is_trained = False
         self.income_threshold = 300000  # Income limit for eligibility
-        
+        self._rf_metrics = {}  # Cached metrics
+        self._rf_training_samples = 0
+
         # Scheme-specific income limits
         self.scheme_income_limits = {
             'PM-KISAN': 200000,
@@ -508,12 +527,71 @@ class FraudDetector:
             'Disability Pension': 200000,
             'Other': 300000
         }
-        
+
     def train_model(self, X):
-        """Train the Isolation Forest model on synthetic/historical data"""
+        """Train the Isolation Forest model and RandomForest classifier on synthetic/historical data"""
         if len(X) > 0:
             self.model.fit(X)
             self.is_trained = True
+            self._train_random_forest(X)
+
+    def _train_random_forest(self, X):
+        """Train a supervised RandomForestClassifier with synthetic labels."""
+        np.random.seed(42)
+        n = len(X)
+        # Label bottom 5% of income-normalized scores as fraud (1), rest as legitimate (0)
+        # Use a deterministic heuristic: high duplicates OR very high income + address reuse = fraud
+        labels = np.zeros(n, dtype=int)
+        for i in range(n):
+            score = 0
+            if X[i, 0] > 400000:   # income
+                score += 1
+            if X[i, 1] > 1:        # duplicate_count
+                score += 2
+            if X[i, 2] > 0.6:     # address_similarity
+                score += 1
+            if X[i, 3] > 3:        # phone_count
+                score += 1
+            if X[i, 4] == 1:       # suspicious_name
+                score += 1
+            if X[i, 6] == 1:       # age_risk
+                score += 1
+            labels[i] = 1 if score >= 3 else 0
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, labels, test_size=0.2, random_state=42, stratify=labels
+        )
+        self.rf_model.fit(X_train, y_train)
+        self.rf_is_trained = True
+        self._rf_training_samples = len(X_train)
+
+        # Cache evaluation metrics
+        y_pred = self.rf_model.predict(X_test)
+        cm = confusion_matrix(y_test, y_pred)
+        self._rf_metrics = {
+            'accuracy': round(float(accuracy_score(y_test, y_pred)), 4),
+            'precision': round(float(precision_score(y_test, y_pred, zero_division=0)), 4),
+            'recall': round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
+            'f1': round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
+            'confusion_matrix': cm.tolist(),
+            'feature_importances': [
+                {'name': name, 'importance': round(float(imp), 4)}
+                for name, imp in sorted(
+                    zip(self.FEATURE_NAMES, self.rf_model.feature_importances_),
+                    key=lambda x: x[1], reverse=True
+                )
+            ],
+            'n_estimators': self.rf_model.n_estimators,
+            'training_samples': self._rf_training_samples,
+            'test_samples': len(X_test),
+        }
+
+    def get_ml_metrics(self):
+        """Return RandomForest model performance metrics. Trains on first call."""
+        if not self.rf_is_trained:
+            synthetic_data = self._generate_synthetic_training_data()
+            self._train_random_forest(synthetic_data)
+        return self._rf_metrics
     
     def calculate_rule_score(self, name, aadhaar, phone, income, address, scheme=None, age=None, gender=None, district=None):
         """Calculate rule-based fraud score with enhanced checks"""
@@ -709,18 +787,30 @@ class FraudDetector:
         return None
     
     def calculate_ml_score(self, features):
-        """Calculate ML-based anomaly score using Isolation Forest"""
+        """Calculate ML-based score blending IsolationForest anomaly + RandomForest fraud probability."""
         if not self.is_trained:
             # Train with synthetic data if not trained
             synthetic_data = self._generate_synthetic_training_data()
             self.train_model(synthetic_data)
-        
+
         features_array = np.array(features).reshape(1, -1)
+
+        # IsolationForest anomaly score (0–15 scale)
         anomaly_score = self.model.decision_function(features_array)[0]
-        # Convert to 0-30 scale (higher score = more anomalous)
-        ml_score = int((1 - (anomaly_score + 0.5)) * 30)
-        ml_score = max(0, min(30, ml_score))  # Clamp between 0-30
+        if_score = int((1 - (anomaly_score + 0.5)) * 15)
+        if_score = max(0, min(15, if_score))
+
+        # RandomForest fraud probability (0–15 scale)
+        rf_fraud_prob = 0
+        if self.rf_is_trained:
+            rf_fraud_prob = int(self.rf_model.predict_proba(features_array)[0][1] * 15)
+            rf_fraud_prob = max(0, min(15, rf_fraud_prob))
+
+        # Combined score: equal weight between IF and RF
+        ml_score = if_score + rf_fraud_prob
+        ml_score = max(0, min(30, ml_score))
         return ml_score
+
     
     def _generate_synthetic_training_data(self):
         """Generate synthetic training data for initial model training"""
